@@ -106,3 +106,24 @@ QString CanInterface::getVersion()
 {
     return "UnKnown";
 }
+
+
+unsigned CanInterface::getBitrate()
+{
+    return 0;
+}
+
+int CanInterface::getSamplePoint()
+{
+    return 0;
+}
+
+unsigned CanInterface::getBitrateFD()
+{
+    return 0;
+}
+
+int CanInterface::getSamplePointFD()
+{
+    return 0;
+}

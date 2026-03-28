@@ -71,8 +71,12 @@ public:
         CANable,
         WeActStudio,
     };
+    enum {
+        USB2CANFDV1,
+        USB2CANFDV2,
+    };
 public:
-    SLCANInterface(SLCANDriver *driver, int index, QString name, bool fd_support, uint32_t manufacturer);
+    SLCANInterface(SLCANDriver *driver, int index, QString name, bool fd_support, uint32_t manufacturer, uint32_t model);
     virtual ~SLCANInterface();
 
     QString getDetailsStr() const;
@@ -90,6 +94,11 @@ public:
     bool supportsTripleSampling();
 
     virtual unsigned getBitrate();
+    virtual int getSamplePoint();
+
+    virtual unsigned getBitrateFD();
+    virtual int getSamplePointFD();
+
     virtual uint32_t getCapabilities();
 
 	virtual void open();
@@ -121,6 +130,7 @@ private:
     } ts_mode_t;
 
     uint32_t _manufacturer;
+    uint32_t _model;
     QString _version;
 
     int _idx;

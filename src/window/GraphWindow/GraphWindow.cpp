@@ -89,7 +89,7 @@ void GraphWindow::testAddData(qreal new_yval)
     qreal ymax = ymin;
 
     // Copy all points but first one
-    for(uint32_t i=1; i < data_series->count(); i++)
+    for(int i=1; i < data_series->count(); i++)
     {
         serbuf->append(data_series->at(i).x()-1, data_series->at(i).y());
 

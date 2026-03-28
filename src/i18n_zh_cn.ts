@@ -125,10 +125,20 @@
     <message>
         <location filename="driver/CanListener.cpp" line="66"/>
         <source>interface: %1, Version: %2</source>
-        <translation type="unfinished">接口: %1, 版本: %2</translation>
+        <translation>接口: %1, 版本: %2</translation>
     </message>
     <message>
-        <location filename="driver/CanListener.cpp" line="78"/>
+        <location filename="driver/CanListener.cpp" line="67"/>
+        <source>CAN Bitrate: %1, SamplePoint: %2</source>
+        <translation>CAN 波特率: %1, 采样点: %2</translation>
+    </message>
+    <message>
+        <location filename="driver/CanListener.cpp" line="68"/>
+        <source>CANFD Bitrate: %1, SamplePoint: %2</source>
+        <translation>CANFD 波特率: %1, 采样点: %2</translation>
+    </message>
+    <message>
+        <location filename="driver/CanListener.cpp" line="81"/>
         <source>Error on interface: %1, Closed!!!</source>
         <translation type="unfinished">接口错误: %1, 关闭!!!</translation>
     </message>

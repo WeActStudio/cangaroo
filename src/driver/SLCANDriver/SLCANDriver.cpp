@@ -59,27 +59,39 @@ bool SLCANDriver::update() {
             std::cout << "   ++ CANable 1.0 or similar ST USB CDC device detected" << std::endl;
 
             // Create new slcan interface without FD support
-            _manufacturer = SLCANInterface::CANable;
-            createOrUpdateInterface(interface_cnt, info.portName(), false, _manufacturer);
+            createOrUpdateInterface(interface_cnt, info.portName(), false, SLCANInterface::CANable, 0);
             interface_cnt++;
         }
         else if(info.vendorIdentifier() == 0x16D0 && info.productIdentifier() == 0x117E)
         {
             std::cout << "   ++ CANable 2.0 detected" << std::endl;
 
-            _manufacturer = SLCANInterface::CANable;
             // Create new slcan interface with FD support
-            createOrUpdateInterface(interface_cnt, info.portName(), true, _manufacturer);
+            createOrUpdateInterface(interface_cnt, info.portName(), true, SLCANInterface::CANable, 0);
             interface_cnt++;
         }
-        else if(info.vendorIdentifier() == 1155 && info.productIdentifier() == 22336 && info.serialNumber().startsWith("AAA"))
+        else if(info.vendorIdentifier() == 1155 && info.productIdentifier() == 22336)
         {
-            std::cout << "   ++ WeAct Studio USB2CAN detected" << std::endl;
+            uint32_t model = 0;
+            if(info.serialNumber().startsWith("AA"))
+            {
+                std::cout << "   ++ WeAct Studio USB2CANFD V1 detected" << std::endl;
+                model = SLCANInterface::USB2CANFDV1;
+            }
+            else if(info.serialNumber().startsWith("B2"))
+            {
+                std::cout << "   ++ WeAct Studio USB2CANFD V2 detected" << std::endl;
+                model = SLCANInterface::USB2CANFDV2;
+            }
+            else
+            {
+                std::cout << "   !! This is not a SLCAN device!" << std::endl;
+                continue;
+            }
             std::cout << "   ++ " << info.serialNumber().toStdString().c_str() << std::endl;
 
-            _manufacturer = SLCANInterface::WeActStudio;
             // Create new slcan interface with FD support
-            createOrUpdateInterface(interface_cnt, info.portName(), true, _manufacturer);
+            createOrUpdateInterface(interface_cnt, info.portName(), true, SLCANInterface::WeActStudio, model);
             interface_cnt++;
         }
         else
@@ -95,7 +107,7 @@ QString SLCANDriver::getName() {
     return "SLCAN";
 }
 
-SLCANInterface *SLCANDriver::createOrUpdateInterface(int index, QString name, bool fd_support, uint32_t manufacturer) {
+SLCANInterface *SLCANDriver::createOrUpdateInterface(int index, QString name, bool fd_support, uint32_t manufacturer, uint32_t model) {
     foreach (CanInterface *intf, getInterfaces()) {
         SLCANInterface *scif = dynamic_cast<SLCANInterface*>(intf);
 		if (scif->getIfIndex() == index) {
@@ -104,7 +116,7 @@ SLCANInterface *SLCANDriver::createOrUpdateInterface(int index, QString name, bo
 		}
 	}
 
-    SLCANInterface *scif = new SLCANInterface(this, index, name, fd_support, manufacturer);
+    SLCANInterface *scif = new SLCANInterface(this, index, name, fd_support, manufacturer, model);
     addInterface(scif);
     return scif;
 }

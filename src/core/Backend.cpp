@@ -138,9 +138,12 @@ void Backend::loadDefaultSetup(MeasurementSetup &setup)
             network->setName(tr("Network ") + QString("%1").arg(i++));
 
             MeasurementInterface *mi = new MeasurementInterface();
+            QList<CanTiming> canTiming = driver->getInterfaceById(intf)->getAvailableBitrates();
             mi->setCanInterface(intf);
-            mi->setBitrate(500000);
-            mi->setFdBitrate(2000000);
+            mi->setBitrate(canTiming.first().getBitrate());
+            mi->setFdBitrate(canTiming.first().getBitrateFD());
+            mi->setFdSamplePoint(canTiming.first().getSamplePointFD());
+            mi->setSamplePoint(canTiming.first().getSamplePoint());
             network->addInterface(mi);
         }
     }

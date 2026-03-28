@@ -229,9 +229,9 @@ void GenericCanSetupPage::fillBitratesList(CanInterface *intf, unsigned selected
 
     ui->cbBitrate->clear();
     foreach (uint32_t br, bitrates) {
-        ui->cbBitrate->addItem(QString::number(br), br);
+        ui->cbBitrate->addItem(CanTiming::getBitrateStr(br), br);
     }
-    ui->cbBitrate->setCurrentText(QString::number(selectedBitrate));
+    ui->cbBitrate->setCurrentText(CanTiming::getBitrateStr(selectedBitrate));
 }
 
 void GenericCanSetupPage::fillSamplePointsForBitrate(CanInterface *intf, unsigned selectedBitrate, unsigned selectedSamplePoint)
@@ -269,9 +269,9 @@ void GenericCanSetupPage::fillFdBitrate(CanInterface *intf, unsigned selectedBit
 
     ui->cbBitrateFD->clear();
     foreach (uint32_t fd_br, fdBitrates) {
-        ui->cbBitrateFD->addItem(QString::number(fd_br), fd_br);
+        ui->cbBitrateFD->addItem(CanTiming::getBitrateFDStr(fd_br), fd_br);
     }
-    ui->cbBitrateFD->setCurrentText(QString::number(selectedBitrate));
+    ui->cbBitrateFD->setCurrentText(CanTiming::getBitrateFDStr(selectedBitrate));
 }
 
 void GenericCanSetupPage::fillSamplePointsForFdBitrate(CanInterface *intf, unsigned selectedBitrate, unsigned selectedSamplePoint)

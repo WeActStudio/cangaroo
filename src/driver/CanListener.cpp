@@ -64,6 +64,9 @@ void CanListener::run()
     _intf.open();
     qRegisterMetaType<log_level_t >("log_level_t");
     log_info(QString(tr("interface: %1, Version: %2")).arg(_intf.getName(),_intf.getVersion()));
+    log_info(QString(tr("CAN Bitrate: %1, SamplePoint: %2")).arg(CanTiming::getBitrateStr(_intf.getBitrate()), CanTiming::getSamplePointStr(_intf.getSamplePoint())));
+    log_info(QString(tr("CANFD Bitrate: %1, SamplePoint: %2")).arg(CanTiming::getBitrateFDStr(_intf.getBitrateFD()), CanTiming::getSamplePointStr(_intf.getSamplePointFD())));
+
     _openComplete = true;
     while (_shouldBeRunning) {
         if (_intf.readMessage(rxMessages, 1000)) {

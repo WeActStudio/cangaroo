@@ -38,7 +38,6 @@ public:
     virtual bool update();
 
 private:
-    SLCANInterface *createOrUpdateInterface(int index, QString name, bool fd_support, uint32_t manufacturer);
+    SLCANInterface *createOrUpdateInterface(int index, QString name, bool fd_support, uint32_t manufacturer, uint32_t model);
     GenericCanSetupPage *setupPage;
-    uint32_t _manufacturer;
 };

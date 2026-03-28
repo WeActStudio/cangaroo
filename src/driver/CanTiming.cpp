@@ -28,9 +28,22 @@ unsigned CanTiming::getBitrate()
     return _bitrate;
 }
 
+QString CanTiming::getBitrateStr(unsigned bitrate)
+{
+    if(bitrate < 1000000)
+        return QString::number(bitrate / 1000.0, 'g', 6).append("Kbps");
+    else
+        return QString::number(bitrate/1000000.0, 'g', 6).append("Mbps");
+}
+
 unsigned CanTiming::getBitrateFD()
 {
     return _bitrate_fd;
+}
+
+QString CanTiming::getBitrateFDStr(unsigned bitrate_fd)
+{
+    return QString::number(bitrate_fd/1000000.0, 'g', 6).append("Mbps");
 }
 
 bool CanTiming::isCanFD()

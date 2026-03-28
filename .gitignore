@@ -36,6 +36,8 @@ Makefile*
 
 test.dbc
 
-.vscode/
+.vscode
 
 build/
+
+.qtc_clangd

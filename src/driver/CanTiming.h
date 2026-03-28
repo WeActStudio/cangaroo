@@ -17,7 +17,9 @@ public:
     CanTiming(unsigned id, unsigned bitrate, unsigned bitrate_fd, unsigned samplePoint, unsigned samplePoint_fd);
     unsigned getId();
     unsigned getBitrate();
+    static QString getBitrateStr(unsigned bitrate);
     unsigned getBitrateFD();
+    static QString getBitrateFDStr(unsigned bitrate_fd);
     bool isCanFD();
     unsigned getSamplePoint();
     static QString getSamplePointStr(unsigned samplePoint);

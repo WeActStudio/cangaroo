@@ -151,6 +151,11 @@ void RawTxWindow::changeDLC()
     if(dlc > 8)
     {
         ui->checkbox_FD->setChecked(true);
+        ui->checkbox_FD->setEnabled(false);
+    }
+    else
+    {
+        ui->checkbox_FD->setEnabled(true);
     }
 
     switch(dlc)
@@ -436,7 +441,14 @@ void RawTxWindow::refreshInterfaces()
 
         if(intf->isOpen())
         {
-            ui->comboBoxInterface->addItem(intf->getName() + " " + intf->getDriver()->getName());
+            QString interfaceStr = QString("%1 %2 %3,%4 / BRS:%5,%6")
+                .arg(intf->getName())
+                .arg(intf->getDriver()->getName())
+                .arg(CanTiming::getBitrateStr(intf->getBitrate()))
+                .arg(CanTiming::getSamplePointStr(intf->getSamplePoint()))
+                .arg(CanTiming::getBitrateFDStr(intf->getBitrateFD()))
+                .arg(CanTiming::getSamplePointFDStr(intf->getSamplePointFD()));
+            ui->comboBoxInterface->addItem(interfaceStr);
             ui->comboBoxInterface->setItemData(cb_idx, QVariant(ifid));
             cb_idx++;
         }

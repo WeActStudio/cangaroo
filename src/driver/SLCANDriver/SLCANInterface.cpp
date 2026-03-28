@@ -39,9 +39,10 @@
 #include <QtSerialPort/QSerialPortInfo>
 #include <QThread>
 
-SLCANInterface::SLCANInterface(SLCANDriver *driver, int index, QString name, bool fd_support, uint32_t manufacturer)
+SLCANInterface::SLCANInterface(SLCANDriver *driver, int index, QString name, bool fd_support, uint32_t manufacturer, uint32_t model)
   : CanInterface((CanDriver *)driver),
     _manufacturer(manufacturer),
+    _model(model),
     _idx(index),
     _isOpen(false),
     _isOffline(false),
@@ -101,7 +102,12 @@ QString SLCANInterface::getDetailsStr() const {
     {
         if(_config.supports_canfd)
         {
-            return "WeAct Studio USB2CAN with CANFD support";
+            if(_model == USB2CANFDV1)
+                return "WeAct Studio USB2CANFD V1, CANFD support";
+            else if(_model == USB2CANFDV2)
+                return "WeAct Studio USB2CANFD V2, CANFD support";
+            else
+                return "Unkonwn, CANFD support";
         }
         else
         {
@@ -133,17 +139,17 @@ QList<CanTiming> SLCANInterface::getAvailableBitrates()
 
     if(_manufacturer == CANable)
     {
-        bitrates.append({10000, 20000, 50000, 83333, 100000, 125000, 250000, 500000, 800000, 1000000});
+        bitrates.append({500000, 10000, 20000, 50000, 83333, 100000, 125000, 250000, 800000, 1000000});
         bitrates_fd.append({2000000, 5000000});
         samplePoints.append({875});
         samplePoints_fd.append({750});
     }
     else if(_manufacturer == WeActStudio)
     {
-        bitrates.append({5000, 10000, 20000, 33333, 50000, 62500, 75000, 83333, 100000, 125000, 250000, 500000, 800000, 1000000});
-        bitrates_fd.append({1000000, 2000000, 3000000, 4000000, 5000000});
-        samplePoints.append({875});
-        samplePoints_fd.append({750});
+        bitrates.append({500000, 5000, 10000, 20000, 33333, 50000, 62500, 75000, 83333, 100000, 125000, 250000, 800000, 1000000});
+        bitrates_fd.append({2000000, 1000000, 3000000, 4000000, 5000000});
+        samplePoints.append({875,500,625,750});
+        samplePoints_fd.append({750,875});
     }
 
     unsigned i=0;
@@ -199,6 +205,21 @@ bool SLCANInterface::supportsTripleSampling()
 unsigned SLCANInterface::getBitrate()
 {
     return _settings.bitrate();
+}
+
+int SLCANInterface::getSamplePoint()
+{
+    return _settings.samplePoint();
+}
+
+unsigned SLCANInterface::getBitrateFD()
+{
+    return _settings.fdBitrate();
+}
+
+int SLCANInterface::getSamplePointFD()
+{
+    return _settings.fdSamplePoint();
 }
 
 uint32_t SLCANInterface::getCapabilities()
@@ -347,70 +368,233 @@ void SLCANInterface::open()
     }
     else
     {
-        // Set the classic CAN bitrate
-        switch(_settings.bitrate())
+        std::cout << "   ++ Set bitrate to " << _settings.bitrate() << std::endl;
+        std::cout << "   ++ Set sample point to " << _settings.samplePoint() << std::endl;
+
+        std::string _bitrate_std = "";
+        if(_settings.samplePoint() == 875)
         {
-            case 1000000:
-                _serport->write("S8\r", 3);
-                _serport->flush();
-                break;
-            case 800000:
-                _serport->write("S7\r", 3);
-                _serport->flush();
-                break;
-            case 500000:
-                _serport->write("S6\r", 3);
-                _serport->flush();
-                break;
-            case 250000:
-                _serport->write("S5\r", 3);
-                _serport->flush();
-                break;
-            case 125000:
-                _serport->write("S4\r", 3);
-                _serport->flush();
-                break;
-            case 100000:
-                _serport->write("S3\r", 3);
-                _serport->flush();
-                break;
-            case 83333:
-                _serport->write("S9\r", 3);
-                _serport->flush();
-                break;
-            case 75000:
-                _serport->write("SA\r", 3);
-                _serport->flush();
-                break;
-            case 62500:
-                _serport->write("SB\r", 3);
-                _serport->flush();
-                break;
-            case 50000:
-                _serport->write("S2\r", 3);
-                _serport->flush();
-                break;
-            case 33333:
-                _serport->write("SC\r", 3);
-                _serport->flush();
-                break;
-            case 20000:
-                _serport->write("S1\r", 3);
-                _serport->flush();
-                break;
-            case 10000:
-                _serport->write("S0\r", 3);
-                _serport->flush();
-                break;
-            case 5000:
-                _serport->write("SD\r", 3);
-                _serport->flush();
-                break;
-            default:
-                // Default to 10k
-                _serport->write("S0\r", 3);
-                _serport->flush();
-                break;
+            // Set the classic CAN bitrate
+            switch(_settings.bitrate())
+            {
+                case 1000000:
+                    _bitrate_std = "S8\r";
+                    break;
+                case 800000:
+                    _bitrate_std = "S7\r";
+                    break;
+                case 500000:
+                    _bitrate_std = "S6\r";
+                    break;
+                case 250000:
+                    _bitrate_std = "S5\r";
+                    break;
+                case 125000:
+                    _bitrate_std = "S4\r";
+                    break;
+                case 100000:
+                    _bitrate_std = "S3\r";
+                    break;
+                case 83333:
+                    _bitrate_std = "S9\r";
+                    break;
+                case 75000:
+                    _bitrate_std = "SA\r";
+                    break;
+                case 62500:
+                    _bitrate_std = "SB\r";
+                    break;
+                case 50000:
+                    _bitrate_std = "S2\r";
+                    break;
+                case 33333:
+                    _bitrate_std = "SC\r";
+                    break;
+                case 20000:
+                    _bitrate_std = "S1\r";
+                    break;
+                case 10000:
+                    _bitrate_std = "S0\r";
+                    break;
+                case 5000:
+                    _bitrate_std = "SD\r";
+                    break;
+                default:
+                    // Default to 10k
+                    _bitrate_std = "S0\r";
+                    break;
+            }
+        }
+        else if(_settings.samplePoint() == 500)
+        {
+            if(_manufacturer == WeActStudio)
+            {
+                switch(_settings.bitrate())
+                {
+                    case 1000000:
+                        _bitrate_std = "S011D1E\r";
+                        break;
+                    case 800000:
+                        _bitrate_std = "S012525\r";
+                        break;
+                    case 500000:
+                        _bitrate_std = "S013B3C\r";
+                        break;
+                    case 250000:
+                        _bitrate_std = "S023B3C\r";
+                        break;
+                    case 125000:
+                        _bitrate_std = "S043B3C\r";
+                        break;
+                    case 100000:
+                        _bitrate_std = "S053B3C\r";
+                        break;
+                    case 83333:
+                        _bitrate_std = "S063B3C\r";
+                        break;
+                    case 75000:
+                        _bitrate_std = "S054F50\r";
+                        break;
+                    case 62500:
+                        _bitrate_std = "S083B3C\r";
+                        break;
+                    case 50000:
+                        _bitrate_std = "S0A3B3C\r";
+                        break;
+                    case 33333:
+                        _bitrate_std = "S087070\r";
+                        break;
+                    case 20000:
+                        _bitrate_std = "S193B3C\r";
+                        break;
+                    case 10000:
+                        _bitrate_std = "S323B3C\r";
+                        break;
+                    case 5000:
+                        _bitrate_std = "S327778\r";
+                        break;
+                    default:
+                        // Default to 10k
+                        _bitrate_std = "S323B3C\r";
+                        break;
+                }
+            }
+        }
+        else if(_settings.samplePoint() == 625)
+        {
+            if(_manufacturer == WeActStudio)
+            {
+                switch(_settings.bitrate())
+                {
+                    case 1000000:
+                        _bitrate_std = "S012516\r";
+                        break;
+                    case 800000:
+                        _bitrate_std = "S012E1C\r";
+                        break;
+                    case 500000:
+                        _bitrate_std = "S014A2D\r";
+                        break;
+                    case 250000:
+                        _bitrate_std = "S024A2D\r";
+                        break;
+                    case 125000:
+                        _bitrate_std = "S044A2D\r";
+                        break;
+                    case 100000:
+                        _bitrate_std = "S054A2D\r";
+                        break;
+                    case 83333:
+                        _bitrate_std = "S064A2D\r";
+                        break;
+                    case 75000:
+                        _bitrate_std = "S05633C\r";
+                        break;
+                    case 62500:
+                        _bitrate_std = "S084A2D\r";
+                        break;
+                    case 50000:
+                        _bitrate_std = "S0A4A2D\r";
+                        break;
+                    case 33333:
+                        _bitrate_std = "S088C54\r";
+                        break;
+                    case 20000:
+                        _bitrate_std = "S194A2D\r";
+                        break;
+                    case 10000:
+                        _bitrate_std = "S324A2D\r";
+                        break;
+                    case 5000:
+                        _bitrate_std = "S32955A\r";
+                        break;
+                    default:
+                        // Default to 10k
+                        _bitrate_std = "S324A2D\r";
+                        break;
+                }
+            }
+        }
+        else if(_settings.samplePoint() == 750)
+        {
+            if(_manufacturer == WeActStudio)
+            {
+                switch(_settings.bitrate())
+                {
+                    case 1000000:
+                        _bitrate_std = "S012C0F\r";
+                        break;
+                    case 800000:
+                        _bitrate_std = "S013713\r";
+                        break;
+                    case 500000:
+                        _bitrate_std = "S01591E\r";
+                        break;
+                    case 250000:
+                        _bitrate_std = "S02591E\r";
+                        break;
+                    case 125000:
+                        _bitrate_std = "S04591E\r";
+                        break;
+                    case 100000:
+                        _bitrate_std = "S05591E\r";
+                        break;
+                    case 83333:
+                        _bitrate_std = "S06591E\r";
+                        break;
+                    case 75000:
+                        _bitrate_std = "S057728\r";
+                        break;
+                    case 62500:
+                        _bitrate_std = "S08591E\r";
+                        break;
+                    case 50000:
+                        _bitrate_std = "S0A591E\r";
+                        break;
+                    case 33333:
+                        _bitrate_std = "S08A838\r";
+                        break;
+                    case 20000:
+                        _bitrate_std = "S19591E\r";
+                        break;
+                    case 10000:
+                        _bitrate_std = "S32591E\r";
+                        break;
+                    case 5000:
+                        _bitrate_std = "S32B33C\r";
+                        break;
+                    default:
+                        // Default to 10k
+                        _bitrate_std = "S32591E\r";
+                        break;
+                }
+            }
+        }
+
+        if(!_bitrate_std.empty())
+        {
+            _serport->write(_bitrate_std.c_str(), _bitrate_std.length());
+            _serport->flush();
         }
     }
 
@@ -428,28 +612,59 @@ void SLCANInterface::open()
         }
         else
         {
-            switch(_settings.fdBitrate())
+            std::cout << "   ++ Set FD bitrate to " << _settings.fdBitrate() << std::endl;
+            std::cout << "   ++ Set FD sample point to " << _settings.fdSamplePoint() << std::endl;
+
+            std::string _fdbitrate_std = "";
+            if(_settings.fdSamplePoint() == 750)
             {
-                case 1000000:
-                    _serport->write("Y1\r", 3);
-                    _serport->flush();
-                    break;
-                case 2000000:
-                    _serport->write("Y2\r", 3);
-                    _serport->flush();
-                    break;
-                case 3000000:
-                    _serport->write("Y3\r", 3);
-                    _serport->flush();
-                    break;
-                case 4000000:
-                    _serport->write("Y4\r", 3);
-                    _serport->flush();
-                    break;
-                case 5000000:
-                    _serport->write("Y5\r", 3);
-                    _serport->flush();
-                    break;
+                switch(_settings.fdBitrate())
+                {
+                    case 1000000:
+                        _fdbitrate_std = "Y1\r";
+                        break;
+                    case 2000000:
+                        _fdbitrate_std = "Y2\r";
+                        break;
+                    case 3000000:
+                        _fdbitrate_std = "Y3\r";
+                        break;
+                    case 4000000:
+                        _fdbitrate_std = "Y4\r";
+                        break;
+                    case 5000000:
+                        _fdbitrate_std = "Y5\r";
+                        break;
+                }
+            }
+            else if(_settings.fdSamplePoint() == 875)
+            {
+                if(_manufacturer == WeActStudio)
+                {
+                    switch(_settings.fdBitrate())
+                    {
+                        case 1000000:
+                            _fdbitrate_std = "Y021904\r";
+                            break;
+                        case 2000000:
+                            _fdbitrate_std = "Y011904\r";
+                            break;
+                        case 3000000:
+                            _fdbitrate_std = "Y011003\r";
+                            break;
+                        case 4000000:
+                            _fdbitrate_std = "Y010C02\r";
+                            break;
+                        case 5000000:
+                            _fdbitrate_std = "Y010902\r";
+                            break;
+                    }
+                }
+            }
+            if(!_fdbitrate_std.empty())
+            {
+                _serport->write(_fdbitrate_std.c_str(), _fdbitrate_std.length());
+                _serport->flush();
             }
         }
     }

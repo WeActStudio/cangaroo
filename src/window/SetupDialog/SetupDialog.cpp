@@ -239,12 +239,12 @@ void SetupDialog::addInterface(const QModelIndex &parent)
 {
     SelectCanInterfacesDialog dlg(0);
     CanInterfaceIdList list;
-    if (dlg.selectInterfaces(*_backend, list, _currentNetwork->getReferencedCanInterfaces())) {
-        foreach (CanInterfaceId intf, list) {
-            model->addInterface(parent, intf);
+    if(_backend->getInterfaceList().length() > 0)
+        if (dlg.selectInterfaces(*_backend, list, _currentNetwork->getReferencedCanInterfaces())) {
+            foreach (CanInterfaceId intf, list) {
+                model->addInterface(parent, intf);
+            }
         }
-    }
-
 }
 
 void SetupDialog::executeAddInterface()

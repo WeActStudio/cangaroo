@@ -435,7 +435,7 @@ bool MainWindow::showSetupDialog()
     MeasurementSetup new_setup(&backend());
     new_setup.cloneFrom(backend().getSetup());
     backend().setDefaultSetup();
-    if(backend().getSetup().countNetworks() == new_setup.countNetworks())
+    if(backend().getSetup().countNetworks() >= new_setup.countNetworks() && new_setup.countNetworks() != 0)
     {
         backend().setSetup(new_setup);
     }
@@ -461,11 +461,11 @@ void MainWindow::showAboutDialog()
        "cangaroo\n"
        "open source can bus analyzer\n"
        "\n"
-       "version 0.2.4.1\n"
+       "version 0.2.4.2\n"
        "\n"
        "(c)2015-2017 Hubert Denkmair\n"
        "(c)2018-2022 Ethan Zonca\n"
-       "(c)2024 WeAct Studio"
+       "(c)2026 WeAct Studio"
     );
 }
 
