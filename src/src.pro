@@ -74,4 +74,12 @@ include($$PWD/driver/GrIPDriver/GrIPDriver.pri)
 
 win32:include($$PWD/driver/CandleApiDriver/CandleApiDriver.pri)
 
+# Pass CONFIG+=kvaser to qmake to enable the Kvaser CANlib driver.
+# Requires the Kvaser CANlib SDK (canlib.h + libcanlib / canlib32.dll).
+# On Windows also set CANLIB_DIR=<path to SDK> (see KvaserDriver.pri).
+kvaser {
+    DEFINES += KVASER_DRIVER
+    include($$PWD/driver/KvaserDriver/KvaserDriver.pri)
+}
+
 DISTFILES +=

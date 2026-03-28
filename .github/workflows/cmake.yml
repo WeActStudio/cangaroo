@@ -11,6 +11,12 @@ jobs:
     name: Build CANgaroo (Ubuntu / Qt6)
     runs-on: ubuntu-24.04
 
+    env:
+      # Kvaser linuxcan version — update here when a newer SDK is released.
+      # Directory/file naming follows Kvaser's YY-MM-Patch scheme.
+      KVASER_VERSION: "5.46"
+      KVASER_DIR_TAG: "24-10-1"
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v6
@@ -42,9 +48,40 @@ jobs:
         echo "=== Adwaita Libraries ==="
         ls -la /usr/lib/x86_64-linux-gnu/libadwaitaqt6*.so* || echo "No Adwaita libraries found"
 
+    - name: Cache Kvaser linuxcan SDK
+      id: cache-kvaser-linux
+      uses: actions/cache@v5
+      with:
+        path: /usr/local/kvaser
+        key: kvaser-linuxcan-${{ env.KVASER_VERSION }}-ubuntu24
+
+    - name: Install Kvaser CANlib (Linux)
+      if: steps.cache-kvaser-linux.outputs.cache-hit != 'true'
+      run: |
+        wget -q "https://www.kvaser.com/files/${{ env.KVASER_DIR_TAG }}/linuxcan.tar.gz" \
+          -O /tmp/linuxcan.tar.gz
+        mkdir -p /tmp/linuxcan
+        tar -xf /tmp/linuxcan.tar.gz -C /tmp/linuxcan --strip-components=1
+        # Build only the userspace canlib — no kernel modules required
+        make -C /tmp/linuxcan/canlib
+        sudo make -C /tmp/linuxcan/canlib install
+        # Cache installed files for future runs
+        sudo mkdir -p /usr/local/kvaser/include /usr/local/kvaser/lib
+        sudo cp /usr/local/include/canlib.h \
+                /usr/local/include/canstat.h \
+                /usr/local/kvaser/include/ 2>/dev/null || true
+        sudo cp -P /usr/local/lib/libcanlib* /usr/local/kvaser/lib/ 2>/dev/null || true
+
+    - name: Restore Kvaser headers/libs from cache
+      if: steps.cache-kvaser-linux.outputs.cache-hit == 'true'
+      run: |
+        sudo cp /usr/local/kvaser/include/* /usr/local/include/ 2>/dev/null || true
+        sudo cp -P /usr/local/kvaser/lib/*   /usr/local/lib/    2>/dev/null || true
+        sudo ldconfig
+
     - name: Run qmake6 and make
       run: |
-        qmake6
+        qmake6 CONFIG+=kvaser
         make -j$(nproc)
 
     - name: Prepare AppDir
@@ -150,7 +187,7 @@ jobs:
           Section: utils
           Priority: optional
           Architecture: ${PKG_ARCH}
-          Depends: libqt6core6t64, libqt6gui6t64, libqt6widgets6t64, libqt6serialport6, libqt6charts6, libnl-3-200, libnl-route-3-200
+          Depends: libqt6core6t64, libqt6gui6t64, libqt6widgets6t64, libqt6serialport6, libqt6charts6, libnl-3-200, libnl-route-3-200, libcanlib (>= 5.0)
           Maintainer: Schildkroet <https://github.com/Schildkroet>
           Description: CAN bus analyzer and visualization tool
            CANgaroo is an open-source CAN bus analyzer with support for
@@ -172,6 +209,13 @@ jobs:
   build-windows:
     name: Build CANgaroo (Windows / MinGW / Qt6)
     runs-on: windows-latest
+
+    env:
+      # Kvaser CANlib Windows SDK version — update here when a newer SDK is released.
+      KVASER_VERSION: "5.46"
+      KVASER_DIR_TAG: "24-10-1"
+      # Default install path used by the Kvaser SDK installer
+      CANLIB_DIR: "C:/Program Files/Kvaser/Drivers"
 
     defaults:
       run:
@@ -210,6 +254,36 @@ jobs:
             mingw-w64-x86_64-pybind11 \
             git
 
+      - name: Cache Kvaser CANlib Windows SDK
+        id: cache-kvaser-win
+        uses: actions/cache@v5
+        with:
+          path: C:/kvaser-sdk
+          key: kvaser-canlib-win-${{ env.KVASER_VERSION }}
+
+      - name: Install Kvaser CANlib SDK (Windows)
+        if: steps.cache-kvaser-win.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $installer = "$env:TEMP\kvaser_canlib_sdk.exe"
+          Invoke-WebRequest `
+            -Uri "https://www.kvaser.com/files/$env:KVASER_DIR_TAG/kvaser_canlib_win_sdk.exe" `
+            -OutFile $installer
+          # Run the NSIS installer silently; default target is C:\Program Files\Kvaser\Drivers
+          Start-Process -FilePath $installer -ArgumentList "/S" -Wait
+          # Copy SDK artefacts to a path without spaces for easier MSYS2 access
+          New-Item -ItemType Directory -Force -Path "C:\kvaser-sdk\include"
+          New-Item -ItemType Directory -Force -Path "C:\kvaser-sdk\lib"
+          Copy-Item "$env:CANLIB_DIR\*.h"   "C:\kvaser-sdk\include\" -ErrorAction SilentlyContinue
+          Copy-Item "$env:CANLIB_DIR\canlib32.dll" "C:\kvaser-sdk\lib\" -ErrorAction SilentlyContinue
+          # Generate MinGW import library from the DLL (gendef + dlltool ship with MinGW toolchain)
+          Set-Location "C:\kvaser-sdk\lib"
+          & "C:\msys64\mingw64\bin\gendef.exe" canlib32.dll
+          & "C:\msys64\mingw64\bin\dlltool.exe" `
+              --as-flags=--64 -m i386:x86-64 -k `
+              -d canlib32.def `
+              -l libcanlib32.a
+
       - name: Verify Qt6 installation
         run: |
           qmake6 --version
@@ -217,7 +291,10 @@ jobs:
 
       - name: Configure build (Qt6 qmake)
         run: |
-          qmake6 CONFIG+=release
+          CANLIB_WIN=$(cygpath -u "C:/kvaser-sdk")
+          qmake6 CONFIG+=release CONFIG+=kvaser \
+            CANLIB_DIR="${CANLIB_WIN}" \
+            LIBS+="-L${CANLIB_WIN}/lib"
 
       - name: Build
         run: |
@@ -290,6 +367,10 @@ jobs:
               echo "Copying $linux_path"
               cp "$linux_path" dist/ || echo "Skipped $linux_path"
               done
+
+      - name: Bundle Kvaser runtime DLL
+        run: |
+          cp /c/kvaser-sdk/lib/canlib32.dll dist/
 
       - name: Verify missing DLLs
         run: |

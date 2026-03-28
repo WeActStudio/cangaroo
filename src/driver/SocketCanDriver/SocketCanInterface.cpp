@@ -28,6 +28,7 @@
 #include <core/CanMessage.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
 #include <QString>
@@ -300,7 +301,13 @@ bool SocketCanInterface::readConfigFromLink(rtnl_link *link)
         rtnl_link_can_get_sample_point(link, &_config.sample_point);
         rtnl_link_can_get_restart_ms(link, &_config.restart_ms);
     } else {
-        // maybe a vcan interface?
+        const char *type = rtnl_link_get_type(link);
+        if (type && strcmp(type, "vcan") == 0) {
+            _config.state = state_ok;
+            _config.supports_canfd = true;
+            _config.supports_timing = false;
+            memset(&_config.bit_timing, 0, sizeof(_config.bit_timing));
+        }
     }
     return true;
 }
