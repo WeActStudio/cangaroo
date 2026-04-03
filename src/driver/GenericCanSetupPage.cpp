@@ -30,6 +30,14 @@ GenericCanSetupPage::GenericCanSetupPage(QWidget *parent) :
 
     connect(ui->CustomBitrateSet, SIGNAL(textChanged(QString)), this, SLOT(updateUI()));
     connect(ui->CustomFdBitrateSet, SIGNAL(textChanged(QString)), this, SLOT(updateUI()));
+
+    connect(ui->cbSlcanEnhanceMode,SIGNAL(stateChanged(int)), this, SLOT(updateUI()));
+
+    connect(ui->cbCanIdFilter,SIGNAL(stateChanged(int)), this, SLOT(updateUI()));
+    connect(ui->StandardIdFilterSet, SIGNAL(textChanged(QString)), this, SLOT(updateUI()));
+    connect(ui->StandardIdMaskSet, SIGNAL(textChanged(QString)), this, SLOT(updateUI()));
+    connect(ui->ExtendedIdFilterSet, SIGNAL(textChanged(QString)), this, SLOT(updateUI()));
+    connect(ui->ExtendedIdMaskSet, SIGNAL(textChanged(QString)), this, SLOT(updateUI()));
 }
 
 GenericCanSetupPage::~GenericCanSetupPage()
@@ -68,6 +76,14 @@ void GenericCanSetupPage::onShowInterfacePage(SetupDialog &dlg, MeasurementInter
     ui->cbCustomBitrate->setChecked(_mi->isCustomBitrate());
     ui->cbCustomFdBitrate->setChecked(_mi->isCustomFdBitrate());
 
+    ui->cbSlcanEnhanceMode->setChecked(_mi->isSlcanEnhanceMode());
+
+    ui->cbCanIdFilter->setChecked(_mi->isFilterEnable());
+    ui->StandardIdFilterSet->setText(QString("%1").arg(_mi->stdFilterId(), 3, 16,QLatin1Char('0')).toUpper());
+    ui->StandardIdMaskSet->setText(QString("%1").arg(_mi->stdFilterMask(), 3, 16,QLatin1Char('0')).toUpper());
+    ui->ExtendedIdFilterSet->setText(QString("%1").arg(_mi->extFilterId(), 8, 16,QLatin1Char('0')).toUpper());
+    ui->ExtendedIdMaskSet->setText(QString("%1").arg(_mi->extFilterMask(), 8, 16,QLatin1Char('0')).toUpper());
+
     ui->CustomBitrateSet->setText(QString("%1").arg(_mi->customBitrate(), 6, 16,QLatin1Char('0')).toUpper());
     ui->CustomFdBitrateSet->setText(QString("%1").arg(_mi->customFdBitrate(), 6, 16,QLatin1Char('0')).toUpper());
 
@@ -95,7 +111,40 @@ void GenericCanSetupPage::updateUI()
         _mi->setCustomBitrateEn(ui->cbCustomBitrate->isChecked());
         _mi->setCustomFdBitrateEn(ui->cbCustomFdBitrate->isChecked());
 
+        _mi->setSlcanEnhanceModeEn(ui->cbSlcanEnhanceMode->isChecked());
+
+        _mi->setFilterEnable(ui->cbCanIdFilter->isChecked());
+
         _enable_ui_updates = false;
+
+        if(ui->cbCanIdFilter->isChecked())
+        {
+            uint16_t std_id = 0,std_mask = 0;
+            if(ui->StandardIdFilterSet->text().length() == 0)
+                std_id = 0;
+            else
+                std_id = ui->StandardIdFilterSet->text().toUpper().toUInt(NULL, 16);
+
+            if(ui->StandardIdMaskSet->text().length() == 0)
+                std_mask = 0;
+            else
+                std_mask = ui->StandardIdMaskSet->text().toUpper().toUInt(NULL, 16);
+
+            _mi->setStdFilter(std_id,std_mask);
+
+            uint32_t ext_id = 0,ext_mask = 0;
+            if(ui->ExtendedIdFilterSet->text().length() == 0)
+                ext_id = 0;
+            else
+                ext_id = ui->ExtendedIdFilterSet->text().toUpper().toUInt(NULL, 16);
+
+            if(ui->ExtendedIdMaskSet->text().length() == 0)
+                ext_mask = 0;
+            else
+                ext_mask = ui->ExtendedIdMaskSet->text().toUpper().toUInt(NULL, 16);
+
+            _mi->setExtFilter(ext_id,ext_mask);
+        }
 
         if(ui->cbCustomBitrate->isChecked())
         {
@@ -301,20 +350,47 @@ void GenericCanSetupPage::disenableUI(bool enabled)
 
     ui->cbBitrate->setEnabled(!ui->cbCustomBitrate->isChecked());
     ui->cbSamplePoint->setEnabled(!ui->cbCustomBitrate->isChecked());
-    ui->cbConfigOS->setEnabled(caps & CanInterface::capability_config_os);
 
     ui->cbBitrateFD->setEnabled(!ui->cbCustomFdBitrate->isChecked() && (caps & CanInterface::capability_canfd));
     ui->cbSamplePointFD->setEnabled(!ui->cbCustomFdBitrate->isChecked() && (caps & CanInterface::capability_canfd));
+
+    ui->cbConfigOS->setEnabled(caps & CanInterface::capability_config_os);
+    ui->cbConfigOS->setVisible(ui->cbConfigOS->isEnabled());
+
     ui->cbListenOnly->setEnabled(enabled && (caps & CanInterface::capability_listen_only));
+    ui->cbListenOnly->setVisible(ui->cbListenOnly->isEnabled());
+
     ui->cbOneShot->setEnabled(enabled && (caps & CanInterface::capability_one_shot));
+    ui->cbOneShot->setVisible(ui->cbOneShot->isEnabled());
+
     ui->cbTripleSampling->setEnabled(enabled && (caps & CanInterface::capability_triple_sampling));
+    ui->cbTripleSampling->setVisible(ui->cbTripleSampling->isEnabled());
+
     ui->cbAutoRestart->setEnabled(enabled && (caps & CanInterface::capability_auto_restart));
+    ui->cbAutoRestart->setVisible(ui->cbAutoRestart->isEnabled());
 
     ui->cbCustomBitrate->setEnabled(enabled && (caps & CanInterface::capability_custom_bitrate));
     ui->cbCustomFdBitrate->setEnabled(enabled && (caps & CanInterface::capability_custom_canfd_bitrate));
+    ui->cbCustomBitrate->setVisible(ui->cbCustomBitrate->isEnabled());
+    ui->cbCustomFdBitrate->setVisible(ui->cbCustomFdBitrate->isEnabled());
+
+    ui->cbSlcanEnhanceMode->setEnabled(enabled && (caps & CanInterface::capability_slcan_enhance_mode));
+    ui->cbSlcanEnhanceMode->setVisible(ui->cbSlcanEnhanceMode->isEnabled());
+
+    ui->cbCanIdFilter->setEnabled(enabled && (caps & CanInterface::capability_can_filter));
+    ui->cbCanIdFilter->setVisible(ui->cbCanIdFilter->isEnabled());
+
+    ui->StandardIdFilterSet->setEnabled(ui->cbCanIdFilter->isChecked());
+    ui->StandardIdMaskSet->setEnabled(ui->cbCanIdFilter->isChecked());
+    ui->ExtendedIdFilterSet->setEnabled(ui->cbCanIdFilter->isChecked());
+    ui->ExtendedIdMaskSet->setEnabled(ui->cbCanIdFilter->isChecked());
+    ui->widget_CanIdFilter->setVisible(ui->cbCanIdFilter->isChecked());
 
     ui->CustomBitrateSet->setEnabled(ui->cbCustomBitrate->isChecked());
     ui->CustomFdBitrateSet->setEnabled(ui->cbCustomFdBitrate->isChecked());
+
+    ui->widget_CustomFdBitrateSet->setVisible(ui->cbCustomFdBitrate->isChecked());
+    ui->widget_CustomBitrateSet->setVisible(ui->cbCustomBitrate->isChecked());
 }
 
 Backend &GenericCanSetupPage::backend()

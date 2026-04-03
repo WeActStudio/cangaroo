@@ -60,6 +60,7 @@ RawTxWindow::RawTxWindow(QWidget *parent, Backend &backend) :
     // TODO: Grey out checkboxes that are invalid depending on DLC spinbox state
     //connect(ui->fieldDLC, SIGNAL(valueChanged(int)), this, SLOT(changeDLC(int)));
     connect(ui->comboBoxDLC, SIGNAL(currentIndexChanged(int)), this, SLOT(changeDLC()));
+    connect(ui->checkBox_IsRTR, SIGNAL(stateChanged(int)), this, SLOT(changeDLC()));
 
     // Disable TX until interfaces are present
     this->setDisabled(1);
@@ -156,6 +157,8 @@ void RawTxWindow::changeDLC()
     else
     {
         ui->checkbox_FD->setEnabled(true);
+        if(ui->checkBox_IsRTR->isChecked())
+            dlc = 0;
     }
 
     switch(dlc)
@@ -203,66 +206,65 @@ void RawTxWindow::changeDLC()
             ui->fieldByte6_1->setEnabled(false);
             ui->fieldByte7_1->setEnabled(false);
             //fallthrough
-    case 16:
-        ui->fieldByte0_2->setEnabled(false);
-        ui->fieldByte1_2->setEnabled(false);
-        ui->fieldByte2_2->setEnabled(false);
-        ui->fieldByte3_2->setEnabled(false);
-        //fallthrough
-    case 20:
-        ui->fieldByte4_2->setEnabled(false);
-        ui->fieldByte5_2->setEnabled(false);
-        ui->fieldByte6_2->setEnabled(false);
-        ui->fieldByte7_2->setEnabled(false);
-        //fallthrough
-    case 24:
-        ui->fieldByte0_3->setEnabled(false);
-        ui->fieldByte1_3->setEnabled(false);
-        ui->fieldByte2_3->setEnabled(false);
-        ui->fieldByte3_3->setEnabled(false);
-        ui->fieldByte4_3->setEnabled(false);
-        ui->fieldByte5_3->setEnabled(false);
-        ui->fieldByte6_3->setEnabled(false);
-        ui->fieldByte7_3->setEnabled(false);
-        //fallthrough
-    case 32:
-        ui->fieldByte0_4->setEnabled(false);
-        ui->fieldByte1_4->setEnabled(false);
-        ui->fieldByte2_4->setEnabled(false);
-        ui->fieldByte3_4->setEnabled(false);
-        ui->fieldByte4_4->setEnabled(false);
-        ui->fieldByte5_4->setEnabled(false);
-        ui->fieldByte6_4->setEnabled(false);
-        ui->fieldByte7_4->setEnabled(false);
+        case 16:
+            ui->fieldByte0_2->setEnabled(false);
+            ui->fieldByte1_2->setEnabled(false);
+            ui->fieldByte2_2->setEnabled(false);
+            ui->fieldByte3_2->setEnabled(false);
+            //fallthrough
+        case 20:
+            ui->fieldByte4_2->setEnabled(false);
+            ui->fieldByte5_2->setEnabled(false);
+            ui->fieldByte6_2->setEnabled(false);
+            ui->fieldByte7_2->setEnabled(false);
+            //fallthrough
+        case 24:
+            ui->fieldByte0_3->setEnabled(false);
+            ui->fieldByte1_3->setEnabled(false);
+            ui->fieldByte2_3->setEnabled(false);
+            ui->fieldByte3_3->setEnabled(false);
+            ui->fieldByte4_3->setEnabled(false);
+            ui->fieldByte5_3->setEnabled(false);
+            ui->fieldByte6_3->setEnabled(false);
+            ui->fieldByte7_3->setEnabled(false);
+            //fallthrough
+        case 32:
+            ui->fieldByte0_4->setEnabled(false);
+            ui->fieldByte1_4->setEnabled(false);
+            ui->fieldByte2_4->setEnabled(false);
+            ui->fieldByte3_4->setEnabled(false);
+            ui->fieldByte4_4->setEnabled(false);
+            ui->fieldByte5_4->setEnabled(false);
+            ui->fieldByte6_4->setEnabled(false);
+            ui->fieldByte7_4->setEnabled(false);
 
-        ui->fieldByte0_5->setEnabled(false);
-        ui->fieldByte1_5->setEnabled(false);
-        ui->fieldByte2_5->setEnabled(false);
-        ui->fieldByte3_5->setEnabled(false);
-        ui->fieldByte4_5->setEnabled(false);
-        ui->fieldByte5_5->setEnabled(false);
-        ui->fieldByte6_5->setEnabled(false);
-        ui->fieldByte7_5->setEnabled(false);
-        //fallthrough
-    case 48:
-        ui->fieldByte0_6->setEnabled(false);
-        ui->fieldByte1_6->setEnabled(false);
-        ui->fieldByte2_6->setEnabled(false);
-        ui->fieldByte3_6->setEnabled(false);
-        ui->fieldByte4_6->setEnabled(false);
-        ui->fieldByte5_6->setEnabled(false);
-        ui->fieldByte6_6->setEnabled(false);
-        ui->fieldByte7_6->setEnabled(false);
+            ui->fieldByte0_5->setEnabled(false);
+            ui->fieldByte1_5->setEnabled(false);
+            ui->fieldByte2_5->setEnabled(false);
+            ui->fieldByte3_5->setEnabled(false);
+            ui->fieldByte4_5->setEnabled(false);
+            ui->fieldByte5_5->setEnabled(false);
+            ui->fieldByte6_5->setEnabled(false);
+            ui->fieldByte7_5->setEnabled(false);
+            //fallthrough
+        case 48:
+            ui->fieldByte0_6->setEnabled(false);
+            ui->fieldByte1_6->setEnabled(false);
+            ui->fieldByte2_6->setEnabled(false);
+            ui->fieldByte3_6->setEnabled(false);
+            ui->fieldByte4_6->setEnabled(false);
+            ui->fieldByte5_6->setEnabled(false);
+            ui->fieldByte6_6->setEnabled(false);
+            ui->fieldByte7_6->setEnabled(false);
 
-        ui->fieldByte0_7->setEnabled(false);
-        ui->fieldByte1_7->setEnabled(false);
-        ui->fieldByte2_7->setEnabled(false);
-        ui->fieldByte3_7->setEnabled(false);
-        ui->fieldByte4_7->setEnabled(false);
-        ui->fieldByte5_7->setEnabled(false);
-        ui->fieldByte6_7->setEnabled(false);
-        ui->fieldByte7_7->setEnabled(false);
-
+            ui->fieldByte0_7->setEnabled(false);
+            ui->fieldByte1_7->setEnabled(false);
+            ui->fieldByte2_7->setEnabled(false);
+            ui->fieldByte3_7->setEnabled(false);
+            ui->fieldByte4_7->setEnabled(false);
+            ui->fieldByte5_7->setEnabled(false);
+            ui->fieldByte6_7->setEnabled(false);
+            ui->fieldByte7_7->setEnabled(false);
     }
 //    repeatmsg_timer->setInterval(ms);
 }
@@ -381,10 +383,15 @@ void RawTxWindow::sendRepeatMessage(bool enable)
         reflash_can_msg();
 
         char outmsg[256];
-        _intf = _backend.getInterfaceById((CanInterfaceId)ui->comboBoxInterface->currentData().toUInt());
-        snprintf(outmsg, 256, "Send [%s] to %d on port %s [ext=%u rtr=%u err=%u fd=%u brs=%u]",
-                 _can_msg.getDataHexString().toLocal8Bit().constData(), _can_msg.getId(), _intf->getName().toLocal8Bit().constData(),
-                 _can_msg.isExtended(), _can_msg.isRTR(), _can_msg.isErrorFrame(), _can_msg.isFD(), _can_msg.isBRS());
+        CanInterface *intf = _backend.getInterfaceById((CanInterfaceId)ui->comboBoxInterface->currentData().toUInt());
+        if(!_can_msg.isRTR())
+            snprintf(outmsg, 256, "Send [%s] to %d on port %s [ext=%u rtr=%u err=%u fd=%u brs=%u]",
+                     _can_msg.getDataHexString().toLocal8Bit().constData(), _can_msg.getId(), intf->getName().toLocal8Bit().constData(),
+                     _can_msg.isExtended(), _can_msg.isRTR(), _can_msg.isErrorFrame(), _can_msg.isFD(), _can_msg.isBRS());
+        else
+            snprintf(outmsg, 256, "Send RemoteFrame %dBytes to %d on port %s [ext=%u rtr=%u err=%u fd=%u brs=%u]",
+                     _can_msg.getLength(), _can_msg.getId(), intf->getName().toLocal8Bit().constData(),
+                     _can_msg.isExtended(), _can_msg.isRTR(), _can_msg.isErrorFrame(), _can_msg.isFD(), _can_msg.isBRS());
         log_info(outmsg);
 
         repeatmsg_timer->start(ui->spinBox_RepeatRate->value());
@@ -403,12 +410,13 @@ void RawTxWindow::sendRepeatMessage(bool enable)
 
 void RawTxWindow::repeatmsg_timer_timeout()
 {
-    if(!_intf->isOpen())
+    CanInterface *intf = _backend.getInterfaceById((CanInterfaceId)ui->comboBoxInterface->currentData().toUInt());
+    if(!intf->isOpen())
     {
-        log_error(_intf->getName() + " not Open!");
+        log_error(intf->getName() + " not Open!");
         return;
     }
-    _intf->sendMessage(_can_msg);
+    intf->sendMessage(_can_msg);
 }
 
 void RawTxWindow::disableTxWindow(int disable)
@@ -619,9 +627,14 @@ void RawTxWindow::sendRawMessage()
     intf->sendMessage(_can_msg);
 
     char outmsg[256];
-    snprintf(outmsg, 256, "Send [%s] to %d on port %s [ext=%u rtr=%u err=%u fd=%u brs=%u]",
-             _can_msg.getDataHexString().toLocal8Bit().constData(), _can_msg.getId(), intf->getName().toLocal8Bit().constData(),
-             _can_msg.isExtended(), _can_msg.isRTR(), _can_msg.isErrorFrame(), _can_msg.isFD(), _can_msg.isBRS());
+    if(!_can_msg.isRTR())
+        snprintf(outmsg, 256, "Send [%s] to %d on port %s [ext=%u rtr=%u err=%u fd=%u brs=%u]",
+                 _can_msg.getDataHexString().toLocal8Bit().constData(), _can_msg.getId(), intf->getName().toLocal8Bit().constData(),
+                 _can_msg.isExtended(), _can_msg.isRTR(), _can_msg.isErrorFrame(), _can_msg.isFD(), _can_msg.isBRS());
+    else
+        snprintf(outmsg, 256, "Send RemoteFrame %dBytes to %d on port %s [ext=%u rtr=%u err=%u fd=%u brs=%u]",
+                 _can_msg.getLength(), _can_msg.getId(), intf->getName().toLocal8Bit().constData(),
+                 _can_msg.isExtended(), _can_msg.isRTR(), _can_msg.isErrorFrame(), _can_msg.isFD(), _can_msg.isBRS());
     log_info(outmsg);
 
 }

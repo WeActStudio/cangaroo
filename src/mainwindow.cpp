@@ -461,11 +461,11 @@ void MainWindow::showAboutDialog()
        "cangaroo\n"
        "open source can bus analyzer\n"
        "\n"
-       "version 0.2.4.2\n"
+       "version 0.2.4.3\n"
        "\n"
        "(c)2015-2017 Hubert Denkmair\n"
        "(c)2018-2022 Ethan Zonca\n"
-       "(c)2026 WeAct Studio"
+       "(c)2024-2026 WeAct Studio"
     );
 }
 

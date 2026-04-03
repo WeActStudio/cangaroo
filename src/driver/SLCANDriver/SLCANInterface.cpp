@@ -48,9 +48,6 @@ SLCANInterface::SLCANInterface(SLCANDriver *driver, int index, QString name, boo
     _isOffline(false),
     _serport(NULL),
     _name(name),
-    _rx_linbuf_ctr(0),
-    _rxbuf_head(0),
-    _rxbuf_tail(0),
     _ts_mode(ts_mode_SIOCSHWTSTAMP),
     _send_wait_respond(0)
 {
@@ -149,7 +146,7 @@ QList<CanTiming> SLCANInterface::getAvailableBitrates()
         bitrates.append({500000, 5000, 10000, 20000, 33333, 50000, 62500, 75000, 83333, 100000, 125000, 250000, 800000, 1000000});
         bitrates_fd.append({2000000, 1000000, 3000000, 4000000, 5000000});
         samplePoints.append({875,500,625,750});
-        samplePoints_fd.append({750,875});
+        samplePoints_fd.append({750,875,625,500});
     }
 
     unsigned i=0;
@@ -238,6 +235,8 @@ uint32_t SLCANInterface::getCapabilities()
         retval =
             // CanInterface::capability_config_os |
             // CanInterface::capability_auto_restart |
+            CanInterface::capability_can_filter |
+            CanInterface::capability_slcan_enhance_mode |
             CanInterface::capability_listen_only |
             CanInterface::capability_custom_bitrate |
             CanInterface::capability_custom_canfd_bitrate;
@@ -661,6 +660,55 @@ void SLCANInterface::open()
                     }
                 }
             }
+            else if(_settings.fdSamplePoint() == 625)
+            {
+                if(_manufacturer == WeActStudio)
+                {
+                    switch(_settings.fdBitrate())
+                    {
+                    case 1000000:
+                        _fdbitrate_std = "Y02120B\r";  // 63.33%
+                        break;
+                    case 2000000:
+                        _fdbitrate_std = "Y01120B\r";  // 63.33%
+                        break;
+                    case 3000000:
+                        _fdbitrate_std = "Y010B08\r";  // 60%
+                        break;
+                    case 4000000:
+                        _fdbitrate_std = "Y010806\r";  // 60%
+                        break;
+                    case 5000000:
+                        _fdbitrate_std = "Y010704\r";  // 66.67%
+                        break;
+                    }
+                }
+            }
+            else if(_settings.fdSamplePoint() == 500)
+            {
+                if(_manufacturer == WeActStudio)
+                {
+                    switch(_settings.fdBitrate())
+                    {
+                    case 1000000:
+                        _fdbitrate_std = "Y020E0F\r";
+                        break;
+                    case 2000000:
+                        _fdbitrate_std = "Y010E0F\r";
+                        break;
+                    case 3000000:
+                        _fdbitrate_std = "Y01090A\r";
+                        break;
+                    case 4000000:
+                        _fdbitrate_std = "Y010608\r";  // 46.67%
+                        break;
+                    case 5000000:
+                        _fdbitrate_std = "Y010506\r";
+                        break;
+                    }
+                }
+            }
+
             if(!_fdbitrate_std.empty())
             {
                 _serport->write(_fdbitrate_std.c_str(), _fdbitrate_std.length());
@@ -683,6 +731,51 @@ void SLCANInterface::open()
     }
     _serport->waitForBytesWritten(300);
 
+    // Set SLCAN Enhance Mode
+    if(_settings.isSlcanEnhanceMode())
+    {
+        _serport->write("H1\r", 3);
+        _serport->flush();
+    }
+    else
+    {
+        _serport->write("H0\r", 3);
+        _serport->flush();
+    }
+    _serport->waitForBytesWritten(300);
+
+    // Set Can Filter
+    if(_settings.isFilterEnable())
+    {
+        QString stdFilter = QString("%1%2")
+            .arg(_settings.stdFilterId(), 3, 16, QLatin1Char('0'))
+            .arg(_settings.stdFilterMask(), 3, 16, QLatin1Char('0'))
+            .toUpper();
+        std::string _filter_std= 'f' + stdFilter.toStdString() + '\r';
+        _serport->write(_filter_std.c_str(), _filter_std.length());
+        _serport->flush();
+        _serport->waitForBytesWritten(300);
+
+        QString extFilter = QString("%1%2")
+            .arg(_settings.extFilterId(), 8, 16, QLatin1Char('0'))
+            .arg(_settings.extFilterMask(), 8, 16, QLatin1Char('0'))
+            .toUpper();
+        std::string _filter_ext= 'F' + extFilter.toStdString() + '\r';
+        _serport->write(_filter_ext.c_str(), _filter_ext.length());
+        _serport->flush();
+        _serport->waitForBytesWritten(300);
+    }
+    else
+    {
+        _serport->write("f000000\r", 8);
+        _serport->flush();
+        _serport->waitForBytesWritten(300);
+        _serport->write("F0000000000000000\r", 18);
+        _serport->flush();
+        _serport->waitForBytesWritten(300);
+    }
+    
+
     // Open the port
     _serport->write("O\r", 2);
     _serport->flush();
@@ -703,8 +796,6 @@ void SLCANInterface::open()
     _can_msg_queue.clear();
     _can_msg_tx_queue.clear();
     _send_wait_respond = 0;
-    memset(_rxbuf,0,sizeof(_rxbuf));
-    memset(_rx_linbuf,0,sizeof(_rx_linbuf));
 
     _isOpen = true;
     _isOffline = false;
@@ -715,6 +806,8 @@ void SLCANInterface::open()
     _status.tx_count = 0;
     _status.tx_errors = 0;
     _status.tx_dropped = 0;
+
+    _rx_data.clear();
 
     // Release port mutex
     _serport_mutex.unlock();
@@ -808,7 +901,14 @@ bool SLCANInterface::isOpen()
     return _isOpen;
 }
 
-void SLCANInterface::sendMessage(const CanMessage &msg) {
+void SLCANInterface::sendMessage(const CanMessage &msg)
+{
+    if(_settings.isSlcanEnhanceMode())
+    {
+        eh_sendMessage(msg);
+        return;
+    }
+
     _serport_mutex.lock();
     // SLCAN_MTU plus null terminator
     can_msg_t can_msg;
@@ -868,7 +968,6 @@ void SLCANInterface::sendMessage(const CanMessage &msg) {
     // Sanity check length
     int8_t bytes = msg.getLength();
 
-
     if(bytes < 0)
         return;
     if(bytes > 64)
@@ -907,10 +1006,13 @@ void SLCANInterface::sendMessage(const CanMessage &msg) {
     can_msg.buf[msg_idx++] = bytes;
 
     // Add data bytes
-    for (uint8_t j = 0; j < msg.getLength(); j++)
+    if(!msg.isRTR())
     {
-        can_msg.buf[msg_idx++] = (msg.getByte(j) >> 4);
-        can_msg.buf[msg_idx++] = (msg.getByte(j) & 0x0F);
+        for (uint8_t j = 0; j < msg.getLength(); j++)
+        {
+            can_msg.buf[msg_idx++] = (msg.getByte(j) >> 4);
+            can_msg.buf[msg_idx++] = (msg.getByte(j) & 0x0F);
+        }
     }
 
     // Convert to ASCII (2nd character to end)
@@ -943,18 +1045,7 @@ bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeou
     CanMessage msgtx;
     QDateTime datetime;
 
-    datetime = QDateTime::currentDateTime();
-    if(datetime.toMSecsSinceEpoch() - _readMessage_datetime_run.toMSecsSinceEpoch() >= 1)
-    {
-        _readMessage_datetime_run = QDateTime::currentDateTime().addMSecs(1);
-    }
-    else
-    {
-        return false;
-    }
-
-    // Don't saturate the thread. Read the buffer every 1ms.
-    //QThread().msleep(1);
+    int sleep_ms = 1;
 
     if(_isOffline == true)
     {
@@ -990,23 +1081,10 @@ bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeou
         _can_msg_queue.pop_front();
 
         // Write string to serial device
-        if(_serport->write(tmp.buf, tmp.length)==tmp.length)
+        if(_serport->write((const char *)tmp.buf, tmp.length)==tmp.length)
         {
             _send_wait_respond ++;
             _readMessage_datetime = QDateTime::currentDateTime();
-
-            // if(_can_msg_tx_queue.empty() == false)
-            // {
-            //     msgtx.cloneFrom(_can_msg_tx_queue.front());
-            //     if(_can_msg_tx_queue.empty() == false)
-            //         _can_msg_tx_queue.pop_front();
-            //     struct timeval tv;
-            //     gettimeofday(&tv,NULL);
-            //     msgtx.setTimestamp(tv);
-            //     _can_msg_tx_queue.push_front(msgtx);
-
-            // }
-
         }
         else
         {
@@ -1018,6 +1096,8 @@ bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeou
                 _can_msg_tx_queue.pop_front();
             }
         }
+        
+        sleep_ms = 0;
 
         //_serport->flush();
         _serport->waitForBytesWritten(300);
@@ -1033,126 +1113,186 @@ bool SLCANInterface::readMessage(QList<CanMessage> &msglist, unsigned int timeou
 
     // RX doesn't work on windows unless we call this for some reason
     _rxbuf_mutex.lock();
-    if(_serport->waitForReadyRead(0))
+    if(_serport->waitForReadyRead(sleep_ms))
     {
         qApp->processEvents();
 
         if(_serport->bytesAvailable())
         {
             // This is called when readyRead() is emitted
-            QByteArray datas = _serport->readAll();
-
-            for(int i=0; i<datas.count(); i++)
-            {
-                // If incrementing the head will hit the tail, we've filled the buffer. Reset and discard all data.
-                if(((_rxbuf_head + 1) % RXCIRBUF_LEN) == _rxbuf_tail)
-                {
-                    _rxbuf_head = 0;
-                    _rxbuf_tail = 0;
-                }
-                else
-                {
-                    // Put inbound data at the head locatoin
-                    _rxbuf[_rxbuf_head] = datas.at(i);
-                    _rxbuf_head = (_rxbuf_head + 1) % RXCIRBUF_LEN; // Wrap at MTU
-                }
-            }
-
+            _rx_data.append(_serport->readAll());
         }
     }
-    _rxbuf_mutex.unlock();
-
-    //////////////////////////
 
     bool ret = true;
-    _rxbuf_mutex.lock();
-    while(_rxbuf_tail != _rxbuf_head)
+
+    if(_rx_data.isEmpty() == false)
     {
-        // Save data if room
-        if(_rx_linbuf_ctr <= SLCAN_MTU)
-        {
-            _rx_linbuf[_rx_linbuf_ctr] = _rxbuf[_rxbuf_tail];
-            _rx_linbuf_ctr++;
-            // std::cout << "result " << std::hex << int(_rxbuf[_rxbuf_tail]) << std::endl;
-            // std::cout << "_rxbuf_tail " << _rxbuf_tail << std::endl;
-            // std::cout << "_rxbuf_head " << _rxbuf_head << std::endl;
-            // std::cout << "_rx_linbuf_ctr " << _rx_linbuf_ctr << std::endl;
-            // If we have a newline, then we just finished parsing a CAN message.
-            if(_rxbuf[_rxbuf_tail] == '\r')
+        static uint8_t raw_length = 0;
+        static QElapsedTimer rx_timer;
+        if(rx_timer.elapsed() >= 10) {
+            _rx_state = PARSE_IDLE;
+        }
+        for (int i = 0; i < _rx_data.size(); ++i) {
+            if(_rx_state == PARSE_IDLE)
             {
-                if(_rx_linbuf_ctr > 1)
+                _rx_data_index = 0;
+                if ((uint8_t)_rx_data.at(i) > SLCAN_EH_START)
                 {
-                    CanMessage msg;
-                    ret = parseMessage(msg);
-                    if(ret == true)
-                    {
-                         msglist.append(msg);
-                        _status.rx_count ++;
-                    }
+                    if(_settings.isSlcanEnhanceMode())
+                        _rx_state = PARSE_RAW_LENGTH;
                 }
                 else
                 {
-                    if(_send_wait_respond)
+                    if (_rx_data.at(i) == SLCAN_RET_OK)
                     {
-                        datetime = QDateTime::currentDateTime();
-                        if(datetime.toMSecsSinceEpoch() - _readMessage_datetime.toMSecsSinceEpoch() < 200)
+                        if(_send_wait_respond)
                         {
-                            _status.tx_count ++;
-                            _status.can_state = state_tx_success;
-                        }
-                        _send_wait_respond --;
-
-                        if(_can_msg_tx_queue.empty() == false)
-                        {
-                            if(_status.can_state == state_tx_success)
+                            datetime = QDateTime::currentDateTime();
+                            if(datetime.toMSecsSinceEpoch() - _readMessage_datetime.toMSecsSinceEpoch() < 200)
                             {
-                                msgtx.cloneFrom(_can_msg_tx_queue.front());
-                                if(msgtx.isShow())
-                                    msglist.append(msgtx);
+                                _status.tx_count ++;
+                                _status.can_state = state_tx_success;
                             }
+                            _send_wait_respond --;
+
+                            if(_can_msg_tx_queue.empty() == false)
+                            {
+                                if(_status.can_state == state_tx_success)
+                                {
+                                    msgtx.cloneFrom(_can_msg_tx_queue.front());
+                                    if(msgtx.isShow())
+                                        msglist.append(msgtx);
+                                }
+                                if(_can_msg_tx_queue.empty() == false)
+                                    _can_msg_tx_queue.pop_front();
+                            }
+                        }
+                        _rx_state = PARSE_IDLE;
+                    }
+                    else if (_rx_data.at(i) == SLCAN_RET_ERR)
+                    {
+                        if(_send_wait_respond)
+                        {
+                            datetime = QDateTime::currentDateTime();
+                            if(datetime.toMSecsSinceEpoch() - _readMessage_datetime.toMSecsSinceEpoch() < 200)
+                            {
+                                _status.tx_errors ++;
+                                _status.can_state = state_tx_fail;
+                            }
+                            _send_wait_respond --;
+
                             if(_can_msg_tx_queue.empty() == false)
                                 _can_msg_tx_queue.pop_front();
                         }
+                        _rx_state = PARSE_IDLE;
                     }
-
+                    else
+                        _rx_state = PARSE_SLCAN;
                 }
-                _rx_linbuf_ctr = 0;
+                _rx_frame[_rx_data_index++] = (uint8_t)_rx_data.at(i);
+                rx_timer.start();
             }
-            else if(_rxbuf[_rxbuf_tail] == '\x07')
+            else if(_rx_state == PARSE_SLCAN)
             {
-                if(_rx_linbuf_ctr == 1)
+                //  Process one whole buffer
+                if (_rx_data.at(i) == SLCAN_RET_OK)
                 {
-                    if(_send_wait_respond)
+                    CanMessage msg;
+                    ret = parseMessage(msg,_rx_frame, _rx_data_index);
+                    if(ret == true)
                     {
-                        datetime = QDateTime::currentDateTime();
-                        if(datetime.toMSecsSinceEpoch() - _readMessage_datetime.toMSecsSinceEpoch() < 200)
-                        {
-                            _status.tx_errors ++;
-                            _status.can_state = state_tx_fail;
-                        }
-                        _send_wait_respond --;
-
-                        if(_can_msg_tx_queue.empty() == false)
-                            _can_msg_tx_queue.pop_front();
+                        msglist.append(msg);
+                        _status.rx_count ++;
+                    }
+                    _rx_state = PARSE_IDLE;
+                }
+                else
+                {
+                    // Check for overflow of buffer
+                    if (_rx_data_index >= SLCAN_MTU)
+                    {
+                        // TODO: Return here and discard this CDC buffer?
+                        _rx_state = PARSE_IDLE;
+                    }
+                    else
+                    {
+                        _rx_frame[_rx_data_index++] = (uint8_t)_rx_data.at(i);
                     }
                 }
-                _rx_linbuf_ctr = 0;
             }
-        }
-        // Discard data if not
-        else
-        {
-            perror("Linbuf full");
-            _rx_linbuf_ctr = 0;
-        }
+            else if(_rx_state == PARSE_RAW_LENGTH)
+            {
+                _rx_frame[_rx_data_index++] = (uint8_t)_rx_data.at(i);
+                raw_length = (uint8_t)_rx_data.at(i) + 2;
+                if(raw_length >= SLCAN_MTU)
+                {
+                    _rx_state = PARSE_IDLE;
+                }
+                else
+                {
+                    _rx_state = PARSE_RAW;
+                }
+            }
+            else if(_rx_state == PARSE_RAW)
+            {
+                _rx_frame[_rx_data_index++] = (uint8_t)_rx_data.at(i);
+                if(_rx_data_index == raw_length)
+                {
+                    CanMessage msg;
+                    ret = eh_parseMessage(msg,_rx_frame);
 
-        _rxbuf_tail = (_rxbuf_tail + 1) % RXCIRBUF_LEN;
+                    if(ret == true)
+                    {
+                        msglist.append(msg);
+                        _status.rx_count ++;
+                    }
+                    _rx_state = PARSE_IDLE;
+                }
+            }
+
+        }
+        _rx_data.clear();
     }
     _rxbuf_mutex.unlock();
     return ret;
 }
 
-bool SLCANInterface::parseMessage(CanMessage &msg)
+int8_t SLCANInterface::hal_dlc_code_to_bytes(uint8_t hal_dlc_code)
+{
+    if(hal_dlc_code <= 8)
+        return (int8_t)hal_dlc_code;
+
+    switch(hal_dlc_code)
+    {
+    case 0x9:
+        return 12;
+        break;
+    case 0xA:
+        return 16;
+        break;
+    case 0xB:
+        return 20;
+        break;
+    case 0xC:
+        return 24;
+        break;
+    case 0xD:
+        return 32;
+        break;
+    case 0xE:
+        return 48;
+        break;
+    case 0xF:
+        return 64;
+        break;
+    default:
+        return -1;
+        break;
+    }
+}
+
+bool SLCANInterface::parseMessage(CanMessage &msg, uint8_t *buf, uint8_t len)
 {
     // Set timestamp to current time
     struct timeval tv;
@@ -1169,24 +1309,24 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     msg.setRX(true);
 
     // Convert from ASCII (2nd character to end)
-    for (int i = 1; i < _rx_linbuf_ctr; i++)
+    for (int i = 1; i < len; i++)
     {
         // Lowercase letters
-        if(_rx_linbuf[i] >= 'a')
-            _rx_linbuf[i] = _rx_linbuf[i] - 'a' + 10;
+        if(buf[i] >= 'a')
+            buf[i] = buf[i] - 'a' + 10;
         // Uppercase letters
-        else if(_rx_linbuf[i] >= 'A')
-            _rx_linbuf[i] = _rx_linbuf[i] - 'A' + 10;
+        else if(buf[i] >= 'A')
+            buf[i] = buf[i] - 'A' + 10;
         // Numbers
         else
-            _rx_linbuf[i] = _rx_linbuf[i] - '0';
+            buf[i] = buf[i] - '0';
     }
 
     bool is_extended = false;
     bool is_rtr = false;
 
     // Handle each incoming command
-    switch(_rx_linbuf[0])
+    switch(buf[0])
     {
         // Transmit data frame command
         case 't':
@@ -1249,9 +1389,6 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
         // Invalid command
         default:
         {
-            // Reset buffer
-            _rx_linbuf_ctr = 0;
-            _rx_linbuf[0] = '\0';
             return false;
         }
     }
@@ -1272,7 +1409,7 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     while(parse_loc <= id_len)
     {
         id_tmp <<= 4;
-        id_tmp += _rx_linbuf[parse_loc++];
+        id_tmp += buf[parse_loc++];
     }
 
     msg.setId(id_tmp);
@@ -1280,7 +1417,7 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
     msg.setRTR(is_rtr);
 
     // Attempt to parse DLC and check sanity
-    uint8_t dlc_code_raw = _rx_linbuf[parse_loc++];
+    uint8_t dlc_code_raw = buf[parse_loc++];
 
     // If dlc is too long for an FD frame
     if(msg.isFD() && dlc_code_raw > 0xF)
@@ -1292,86 +1429,292 @@ bool SLCANInterface::parseMessage(CanMessage &msg)
         return false;
     }
 
-    if(dlc_code_raw > 0x8)
+    int8_t bytes_in_msg = hal_dlc_code_to_bytes(dlc_code_raw);
+    if(bytes_in_msg<0)
     {
-        switch(dlc_code_raw)
-        {
-        case 0x9:
-            dlc_code_raw = 12;
-            break;
-        case 0xA:
-            dlc_code_raw = 16;
-            break;
-        case 0xB:
-            dlc_code_raw = 20;
-            break;
-        case 0xC:
-            dlc_code_raw = 24;
-            break;
-        case 0xD:
-            dlc_code_raw = 32;
-            break;
-        case 0xE:
-            dlc_code_raw = 48;
-            break;
-        case 0xF:
-            dlc_code_raw = 64;
-            break;
-        default:
-            dlc_code_raw = 0;
-            perror("Invalid length");
-            break;
-        }
-    }
-
-    msg.setLength(dlc_code_raw);
-
-    // Calculate number of bytes we expect in the message
-    int8_t bytes_in_msg = dlc_code_raw;
-
-    if(bytes_in_msg < 0) {
-        perror("Invalid length < 0");
+        perror("Invalid Dlc length");
         return false;
     }
-    if(bytes_in_msg > 64) {
-        perror("Invalid length > 64");
-        return false;
-    }
+
+    msg.setLength((uint8_t)bytes_in_msg);
 
     // Parse data
     // TODO: Guard against walking off the end of the string!
-    for (uint8_t i = 0; i < bytes_in_msg; i++)
+    uint8_t tx_msg_len = 1 + id_len + 1;
+    if(!msg.isRTR())
+        tx_msg_len += bytes_in_msg << 1;
+    
+    if(tx_msg_len != len)
     {
-        msg.setByte(i,  (_rx_linbuf[parse_loc] << 4) + _rx_linbuf[parse_loc+1]);
-        parse_loc += 2;
+        perror("Invalid message length");
+        return false;
     }
 
-    // Reset buffer
-    _rx_linbuf_ctr = 0;
-    _rx_linbuf[0] = '\0';
-    return true;
-
-
-/*
-
-    // FIXME
-    if (_ts_mode == ts_mode_SIOCSHWTSTAMP) {
-        // TODO implement me
-        _ts_mode = ts_mode_SIOCGSTAMPNS;
-    }
-
-    if (_ts_mode==ts_mode_SIOCGSTAMPNS) {
-        if (ioctl(_fd, SIOCGSTAMPNS, &ts_rcv) == 0) {
-            msg.setTimestamp(ts_rcv.tv_sec, ts_rcv.tv_nsec/1000);
-        } else {
-            _ts_mode = ts_mode_SIOCGSTAMP;
+    if(!msg.isRTR())
+    {
+        for (uint8_t i = 0; i < bytes_in_msg; i++)
+        {
+            msg.setByte(i,  (buf[parse_loc] << 4) + buf[parse_loc+1]);
+            parse_loc += 2;
         }
     }
 
-    if (_ts_mode==ts_mode_SIOCGSTAMP) {
-        ioctl(_fd, SIOCGSTAMP, &tv_rcv);
-        msg.setTimestamp(tv_rcv.tv_sec, tv_rcv.tv_usec);
-    }*/
+    return true;
+}
 
+void SLCANInterface::eh_sendMessage(const CanMessage &msg)
+{
+    _serport_mutex.lock();
 
+    int32_t msg_len = 0;
+
+    can_msg_t can_msg;
+
+    slcan_eh_msg_t *slmsg = (slcan_eh_msg_t *)can_msg.buf;
+
+    // Handle classic CAN frames
+    if (!msg.isFD())
+    {
+        // Add character for frame type
+        if (!msg.isRTR())
+        {
+            slmsg->header = SLCAN_STD_HEADER + SLCAN_EH_START;
+        }
+        else
+        {
+            slmsg->header = SLCAN_STD_REMOTE_HEADER + SLCAN_EH_START;
+        }
+    }
+    // Handle FD CAN frames
+    else
+    {
+        // FD doesn't support remote frames so this must be a data frame
+
+        // Frame with BRS enabled
+        if (msg.isBRS())
+        {
+            slmsg->header = SLCAN_STD_FDBRS_HEADER + SLCAN_EH_START;
+        }
+        // Frame with BRS disabled
+        else
+        {
+            slmsg->header = SLCAN_STD_FD_HEADER + SLCAN_EH_START;
+        }
+    }
+
+    int8_t bytes = msg.getLength();
+    if(bytes < 0)
+        return;
+    if(bytes > 64)
+        return;
+
+    // If canfd
+    if(bytes > 8)
+    {
+        switch(bytes)
+        {
+        case 12:
+            bytes = 0x9;
+            break;
+        case 16:
+            bytes = 0xA;
+            break;
+        case 20:
+            bytes = 0xB;
+            break;
+        case 24:
+            bytes = 0xC;
+            break;
+        case 32:
+            bytes = 0xD;
+            break;
+        case 48:
+            bytes = 0xE;
+            break;
+        case 64:
+            bytes = 0xF;
+            break;
+        }
+    }
+
+    if (msg.isExtended())
+    {
+        // Convert first char to upper case for extended frame
+        slmsg->header -= 32;
+
+        slmsg->frame.ext_frame.ext_id = msg.getId();
+        slmsg->frame.ext_frame.dlc = bytes;
+
+        if(!msg.isRTR())
+        {
+            for (uint8_t j = 0; j < msg.getLength(); j++)
+            {
+                slmsg->frame.ext_frame.data[j] = msg.getByte(j);
+            }
+            msg_len = SLCAN_EH_EXT_ID_LEN + 1 + msg.getLength();
+        }
+        else
+        {
+            msg_len = SLCAN_EH_EXT_ID_LEN + 1;
+        }
+
+        slmsg->length = msg_len;
+    }
+    else
+    {
+        slmsg->frame.std_frame.std_id = msg.getId();
+        slmsg->frame.std_frame.dlc = bytes;
+
+        if(!msg.isRTR())
+        {
+            for (uint8_t j = 0; j < msg.getLength(); j++)
+            {
+                slmsg->frame.std_frame.data[j] = msg.getByte(j);
+            }
+            msg_len = SLCAN_EH_STD_ID_LEN + 1 + msg.getLength();
+        }
+        else
+        {
+            msg_len = SLCAN_EH_STD_ID_LEN + 1;
+        }
+
+        slmsg->length = msg_len;
+    }
+
+    can_msg.length = slmsg->length + 2;
+
+    _can_msg_queue.append(can_msg);
+    _can_msg_tx_queue.append(msg);
+
+    _serport_mutex.unlock();
+}
+
+bool SLCANInterface::eh_parseMessage(CanMessage &msg, uint8_t *buf)
+{
+    uint8_t id_len = 0;
+    uint8_t data_len = 0;
+    uint8_t dlc = 0;
+    uint8_t *data;
+
+    slcan_eh_msg_t *slmsg = (slcan_eh_msg_t *)buf;
+
+    struct timeval tv;
+    gettimeofday(&tv,NULL);
+    msg.setTimestamp(tv);
+
+    // Defaults
+    msg.setErrorFrame(0);
+    msg.setInterfaceId(getId());
+    msg.setId(0);
+    msg.setExtended(false);
+    msg.setRTR(false);
+    msg.setFD(false);
+    msg.setBRS(false);
+    msg.setRX(true);
+
+    if(!_settings.isSlcanEnhanceMode())
+        return false;
+
+    switch (slmsg->header)
+    {
+    case SLCAN_STD_HEADER + SLCAN_EH_START:
+        id_len = SLCAN_EH_STD_ID_LEN;
+        msg.setId(slmsg->frame.std_frame.std_id);
+        dlc = slmsg->frame.std_frame.dlc;
+        data = slmsg->frame.std_frame.data;
+        data_len = slmsg->length - id_len - 1;
+        break;
+    case SLCAN_EXT_HEADER + SLCAN_EH_START:
+        id_len = SLCAN_EH_EXT_ID_LEN;
+        msg.setId(slmsg->frame.ext_frame.ext_id);
+        msg.setExtended(true);
+        dlc = slmsg->frame.ext_frame.dlc;
+        data = slmsg->frame.ext_frame.data;
+        data_len = slmsg->length - id_len - 1;
+        break;
+    case SLCAN_STD_REMOTE_HEADER + SLCAN_EH_START:
+        msg.setId(slmsg->frame.std_frame.std_id);
+        msg.setRTR(true);
+        dlc = slmsg->frame.std_frame.dlc;
+        data = slmsg->frame.std_frame.data;
+        data_len = 0;
+        break;
+    case SLCAN_EXT_REMOTE_HEADER + SLCAN_EH_START:
+        msg.setId(slmsg->frame.ext_frame.ext_id);
+        msg.setExtended(true);
+        msg.setRTR(true);
+        dlc = slmsg->frame.ext_frame.dlc;
+        data = slmsg->frame.ext_frame.data;
+        data_len = 0;
+        break;
+    case SLCAN_STD_FD_HEADER + SLCAN_EH_START:
+        id_len = SLCAN_EH_STD_ID_LEN;
+        msg.setFD(true);
+        msg.setId(slmsg->frame.std_frame.std_id);
+        dlc = slmsg->frame.std_frame.dlc;
+        data = slmsg->frame.std_frame.data;
+        data_len = slmsg->length - id_len - 1;
+        break;
+    case SLCAN_EXT_FD_HEADER + SLCAN_EH_START:
+        id_len = SLCAN_EH_EXT_ID_LEN;
+        msg.setFD(true);
+        msg.setId(slmsg->frame.ext_frame.ext_id);
+        msg.setExtended(true);
+        dlc = slmsg->frame.ext_frame.dlc;
+        data = slmsg->frame.ext_frame.data;
+        data_len = slmsg->length - id_len - 1;
+        break;
+    case SLCAN_STD_FDBRS_HEADER + SLCAN_EH_START:
+        id_len = SLCAN_EH_STD_ID_LEN;
+        msg.setFD(true);
+        msg.setId(slmsg->frame.std_frame.std_id);
+        msg.setBRS(true);
+        dlc = slmsg->frame.std_frame.dlc;
+        data = slmsg->frame.std_frame.data;
+        data_len = slmsg->length - id_len - 1;
+        break;
+    case SLCAN_EXT_FDBRS_HEADER + SLCAN_EH_START:
+        id_len = SLCAN_EH_EXT_ID_LEN;
+        msg.setFD(true);
+        msg.setId(slmsg->frame.ext_frame.ext_id);
+        msg.setExtended(true);
+        msg.setBRS(true);
+        dlc = slmsg->frame.ext_frame.dlc;
+        data = slmsg->frame.ext_frame.data;
+        data_len = slmsg->length - id_len - 1;
+        break;
+
+    default:
+        return false;
+    }
+
+    // Set TX frame DLC according to HAL
+    int8_t bytes_in_msg = hal_dlc_code_to_bytes(dlc);
+    if (bytes_in_msg < 0)
+    {
+        perror("Invalid Dlc length");
+        return false;
+    }
+    msg.setLength((uint8_t)bytes_in_msg);
+
+    // Set TX frame data
+    if(!msg.isRTR())
+    {
+        if(bytes_in_msg == data_len)
+        {
+            for (uint8_t i = 0; i < data_len; i++)
+            {
+                msg.setByte(i,  data[i]);
+            }
+        }
+        else
+        {
+
+            perror("Invalid message length");
+            return false;
+
+        }
+    }
+
+    return true;
 }

@@ -83,6 +83,20 @@ public:
 
     uint32_t customFdBitrate() const;
     void setCustomFdBitrate(uint32_t customFdBitrate);
+
+    bool isSlcanEnhanceMode() const;
+    void setSlcanEnhanceModeEn(bool slcanEnhanceMode);
+
+    bool isFilterEnable() const;
+    void setFilterEnable(bool filterEnable);
+    void setStdFilter(uint16_t id, uint16_t mask);
+    void setExtFilter(uint32_t id, uint32_t mask);
+    
+    uint16_t stdFilterId() const;
+    uint16_t stdFilterMask() const;
+    uint32_t extFilterId() const;
+    uint32_t extFilterMask() const;
+
 private:
     CanInterfaceId _canif;
 
@@ -104,6 +118,14 @@ private:
     bool _isCustomBitrate;
     bool _isCustomFdBitrate;
 
+    bool _isSlcanEnhanceMode;
+
     uint32_t _CustomBitrate;
     uint32_t _CustomFdBitrate;
+
+    bool _isFilterEnable = false;
+    uint16_t _stdFilterId = 0;
+    uint16_t _stdFilterMask = 0;
+    uint32_t _extFilterId = 0;
+    uint32_t _extFilterMask = 0;
 };

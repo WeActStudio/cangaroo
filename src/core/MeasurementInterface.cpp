@@ -43,6 +43,8 @@ MeasurementInterface::MeasurementInterface()
     _isCustomBitrate(false),
     _isCustomFdBitrate(false),
 
+    _isSlcanEnhanceMode(false),
+
     _CustomBitrate(0x023407),
     _CustomFdBitrate(0x011508)
 {
@@ -72,6 +74,14 @@ bool MeasurementInterface::loadXML(Backend &backend, QDomElement &el)
 
     _CustomBitrate = el.attribute("custom-bitrate", "0").toInt();
     _CustomFdBitrate = el.attribute("custom-fdbitrate", "0").toInt();
+
+    _isSlcanEnhanceMode = el.attribute("is-slcan-enhancemode", "0").toInt() != 0;
+
+    _isFilterEnable = el.attribute("is-filter-enable", "0").toInt() != 0;
+    _stdFilterId = el.attribute("std-filter-id", "0").toInt();
+    _stdFilterMask = el.attribute("std-filter-mask", "0").toInt();
+    _extFilterId = el.attribute("ext-filter-id", "0").toInt();
+    _extFilterMask = el.attribute("ext-filter-mask", "0").toInt();
     return true;
 }
 
@@ -102,6 +112,14 @@ bool MeasurementInterface::saveXML(Backend &backend, QDomDocument &xml, QDomElem
 
     root.setAttribute("custom-bitrate", _CustomBitrate);
     root.setAttribute("custom-fdbitrate", _CustomFdBitrate);
+
+    root.setAttribute("is-slcan-enhancemode", _isSlcanEnhanceMode ? 1 : 0);
+
+    root.setAttribute("is-filter-enable", _isFilterEnable ? 1 : 0);
+    root.setAttribute("std-filter-id", _stdFilterId);
+    root.setAttribute("std-filter-mask", _stdFilterMask);
+    root.setAttribute("ext-filter-id", _extFilterId);
+    root.setAttribute("ext-filter-mask", _extFilterMask);
     return true;
 }
 
@@ -268,4 +286,56 @@ uint32_t MeasurementInterface::customFdBitrate() const
 void MeasurementInterface::setCustomFdBitrate(uint32_t customFdBitrate)
 {
     _CustomFdBitrate = customFdBitrate;
+}
+
+bool MeasurementInterface::isSlcanEnhanceMode() const
+{
+    return _isSlcanEnhanceMode;
+}
+
+void MeasurementInterface::setSlcanEnhanceModeEn(bool slcanEnhanceMode)
+{
+    _isSlcanEnhanceMode = slcanEnhanceMode;
+}
+
+bool MeasurementInterface::isFilterEnable() const
+{
+    return _isFilterEnable;
+}
+
+void MeasurementInterface::setFilterEnable(bool filterEnable)
+{
+    _isFilterEnable = filterEnable;
+}
+
+void MeasurementInterface::setStdFilter(uint16_t id, uint16_t mask)
+{
+    _stdFilterId = id;
+    _stdFilterMask = mask;
+}
+
+uint16_t MeasurementInterface::stdFilterId() const
+{
+    return _stdFilterId;
+}
+
+uint16_t MeasurementInterface::stdFilterMask() const
+{
+    return _stdFilterMask;
+}
+
+void MeasurementInterface::setExtFilter(uint32_t id, uint32_t mask)
+{
+    _extFilterId = id;
+    _extFilterMask = mask;
+}
+
+uint32_t MeasurementInterface::extFilterId() const
+{
+    return _extFilterId;
+}
+
+uint32_t MeasurementInterface::extFilterMask() const
+{
+    return _extFilterMask;
 }

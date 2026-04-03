@@ -201,167 +201,6 @@
     <string>Options:</string>
    </property>
   </widget>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>230</y>
-     <width>411</width>
-     <height>185</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="vbOptions">
-    <item>
-     <widget class="QCheckBox" name="cbConfigOS">
-      <property name="text">
-       <string>configured by operating system</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="cbListenOnly">
-      <property name="text">
-       <string>Bus Monitoring mode</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="cbOneShot">
-      <property name="text">
-       <string>One-Shot mode</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="cbTripleSampling">
-      <property name="text">
-       <string>Triple Sampling</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="cbAutoRestart">
-      <property name="text">
-       <string>Auto-Restart on bus off condition</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="cbCustomBitrate">
-      <property name="text">
-       <string>Custom Bitrate + Sample Point</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QCheckBox" name="cbCustomFdBitrate">
-      <property name="text">
-       <string>Custom CAN FD Data Bitrate + Sample Point</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QLineEdit" name="CustomBitrateSet">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>120</y>
-     <width>72</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="inputMask">
-    <string>HHHHHH</string>
-   </property>
-   <property name="text">
-    <string notr="true"/>
-   </property>
-   <property name="maxLength">
-    <number>6</number>
-   </property>
-   <property name="frame">
-    <bool>true</bool>
-   </property>
-   <property name="cursorPosition">
-    <number>6</number>
-   </property>
-   <property name="placeholderText">
-    <string/>
-   </property>
-   <property name="cursorMoveStyle">
-    <enum>Qt::LogicalMoveStyle</enum>
-   </property>
-   <property name="clearButtonEnabled">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_12">
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>94</y>
-     <width>141</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Div+Seg1+Seg2 (Hex)</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_13">
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>170</y>
-     <width>141</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Div+Seg1+Seg2 (Hex)</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="CustomFdBitrateSet">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>330</x>
-     <y>196</y>
-     <width>72</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="inputMask">
-    <string>HHHHHH</string>
-   </property>
-   <property name="text">
-    <string notr="true"/>
-   </property>
-   <property name="maxLength">
-    <number>6</number>
-   </property>
-   <property name="frame">
-    <bool>true</bool>
-   </property>
-   <property name="cursorPosition">
-    <number>6</number>
-   </property>
-   <property name="placeholderText">
-    <string/>
-   </property>
-   <property name="cursorMoveStyle">
-    <enum>Qt::LogicalMoveStyle</enum>
-   </property>
-   <property name="clearButtonEnabled">
-    <bool>false</bool>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_14">
    <property name="geometry">
     <rect>
@@ -401,6 +240,527 @@
    <property name="text">
     <string>CAN Setting / CAN FD Arbitration Phase Setting</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>230</y>
+     <width>462</width>
+     <height>354</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_">
+    <item>
+     <layout class="QVBoxLayout" name="vbOptions">
+      <item>
+       <widget class="QCheckBox" name="cbConfigOS">
+        <property name="text">
+         <string>configured by operating system</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbListenOnly">
+        <property name="text">
+         <string>Bus Monitoring mode</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbOneShot">
+        <property name="text">
+         <string>One-Shot mode</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbTripleSampling">
+        <property name="text">
+         <string>Triple Sampling</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbAutoRestart">
+        <property name="text">
+         <string>Auto-Restart on bus off condition</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbCustomBitrate">
+        <property name="text">
+         <string>Custom Bitrate + Sample Point</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbCustomFdBitrate">
+        <property name="text">
+         <string>Custom CAN FD Data Bitrate + Sample Point</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbSlcanEnhanceMode">
+        <property name="text">
+         <string>SLCAN Enhance Mode (Use binary data, save 50% time)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="cbCanIdFilter">
+        <property name="text">
+         <string>CAN ID Filter</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="widget_CanIdFilter" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>Standard ID Filter</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <property name="spacing">
+              <number>6</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Filter</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_18">
+               <property name="text">
+                <string>MASK</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <property name="spacing">
+              <number>6</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="StandardIdFilterSet">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTipDuration">
+                <number>-1</number>
+               </property>
+               <property name="inputMask">
+                <string>HHH</string>
+               </property>
+               <property name="text">
+                <string notr="true"/>
+               </property>
+               <property name="maxLength">
+                <number>3</number>
+               </property>
+               <property name="frame">
+                <bool>true</bool>
+               </property>
+               <property name="cursorPosition">
+                <number>3</number>
+               </property>
+               <property name="placeholderText">
+                <string/>
+               </property>
+               <property name="cursorMoveStyle">
+                <enum>Qt::LogicalMoveStyle</enum>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="StandardIdMaskSet">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string/>
+               </property>
+               <property name="statusTip">
+                <string/>
+               </property>
+               <property name="inputMask">
+                <string>HHH</string>
+               </property>
+               <property name="text">
+                <string notr="true"/>
+               </property>
+               <property name="maxLength">
+                <number>3</number>
+               </property>
+               <property name="frame">
+                <bool>true</bool>
+               </property>
+               <property name="cursorPosition">
+                <number>3</number>
+               </property>
+               <property name="placeholderText">
+                <string/>
+               </property>
+               <property name="cursorMoveStyle">
+                <enum>Qt::LogicalMoveStyle</enum>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="Line" name="line_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <property name="spacing">
+            <number>6</number>
+           </property>
+           <item>
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>Extended ID Filter</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <property name="spacing">
+              <number>6</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_20">
+               <property name="text">
+                <string>Filter</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_21">
+               <property name="text">
+                <string>MASK</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <property name="spacing">
+              <number>6</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="ExtendedIdFilterSet">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTipDuration">
+                <number>-1</number>
+               </property>
+               <property name="inputMask">
+                <string>HHHHHHHH</string>
+               </property>
+               <property name="text">
+                <string notr="true"/>
+               </property>
+               <property name="maxLength">
+                <number>8</number>
+               </property>
+               <property name="frame">
+                <bool>true</bool>
+               </property>
+               <property name="cursorPosition">
+                <number>8</number>
+               </property>
+               <property name="placeholderText">
+                <string/>
+               </property>
+               <property name="cursorMoveStyle">
+                <enum>Qt::LogicalMoveStyle</enum>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="ExtendedIdMaskSet">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="toolTip">
+                <string/>
+               </property>
+               <property name="statusTip">
+                <string/>
+               </property>
+               <property name="inputMask">
+                <string>HHHHHHHH</string>
+               </property>
+               <property name="text">
+                <string notr="true"/>
+               </property>
+               <property name="maxLength">
+                <number>8</number>
+               </property>
+               <property name="frame">
+                <bool>true</bool>
+               </property>
+               <property name="cursorPosition">
+                <number>8</number>
+               </property>
+               <property name="placeholderText">
+                <string/>
+               </property>
+               <property name="cursorMoveStyle">
+                <enum>Qt::LogicalMoveStyle</enum>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="widget_CustomFdBitrateSet" native="true">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>170</y>
+     <width>146</width>
+     <height>45</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="label_13">
+      <property name="text">
+       <string>Div+Seg1+Seg2 (Hex)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <item>
+       <widget class="QLineEdit" name="CustomFdBitrateSet">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="inputMask">
+         <string>HHHHHH</string>
+        </property>
+        <property name="text">
+         <string notr="true"/>
+        </property>
+        <property name="maxLength">
+         <number>6</number>
+        </property>
+        <property name="frame">
+         <bool>true</bool>
+        </property>
+        <property name="cursorPosition">
+         <number>6</number>
+        </property>
+        <property name="placeholderText">
+         <string/>
+        </property>
+        <property name="cursorMoveStyle">
+         <enum>Qt::LogicalMoveStyle</enum>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="widget_CustomBitrateSet" native="true">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>94</y>
+     <width>146</width>
+     <height>45</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="label_12">
+      <property name="text">
+       <string>Div+Seg1+Seg2 (Hex)</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <item>
+       <widget class="QLineEdit" name="CustomBitrateSet">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="inputMask">
+         <string>HHHHHH</string>
+        </property>
+        <property name="text">
+         <string notr="true"/>
+        </property>
+        <property name="maxLength">
+         <number>6</number>
+        </property>
+        <property name="frame">
+         <bool>true</bool>
+        </property>
+        <property name="cursorPosition">
+         <number>6</number>
+        </property>
+        <property name="placeholderText">
+         <string/>
+        </property>
+        <property name="cursorMoveStyle">
+         <enum>Qt::LogicalMoveStyle</enum>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>

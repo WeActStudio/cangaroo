@@ -75,9 +75,7 @@ bool Backend::startMeasurement()
     _measurementStartTime = QDateTime::currentMSecsSinceEpoch();
     _timerSinceStart.start();
 
-    int i=0;
     foreach (MeasurementNetwork *network, _setup.getNetworks()) {
-        i++;
         foreach (MeasurementInterface *mi, network->interfaces()) {
 
             CanInterface *intf = getInterfaceById(mi->canInterface());
@@ -140,10 +138,18 @@ void Backend::loadDefaultSetup(MeasurementSetup &setup)
             MeasurementInterface *mi = new MeasurementInterface();
             QList<CanTiming> canTiming = driver->getInterfaceById(intf)->getAvailableBitrates();
             mi->setCanInterface(intf);
-            mi->setBitrate(canTiming.first().getBitrate());
-            mi->setFdBitrate(canTiming.first().getBitrateFD());
-            mi->setFdSamplePoint(canTiming.first().getSamplePointFD());
-            mi->setSamplePoint(canTiming.first().getSamplePoint());
+            if (!canTiming.isEmpty()) {
+                mi->setBitrate(canTiming.first().getBitrate());
+                mi->setFdBitrate(canTiming.first().getBitrateFD());
+                mi->setFdSamplePoint(canTiming.first().getSamplePointFD());
+                mi->setSamplePoint(canTiming.first().getSamplePoint());
+            }
+            else {
+                mi->setBitrate(500000);
+                mi->setFdBitrate(2000000);
+                mi->setFdSamplePoint(875);
+                mi->setSamplePoint(875);
+            }
             network->addInterface(mi);
         }
     }

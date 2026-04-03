@@ -197,7 +197,7 @@ QVariant BaseTraceViewModel::data_DisplayRole_Message(const QModelIndex &index, 
             return backend()->getInterfaceName(currentMsg.getInterfaceId());
 
         case column_direction:
-            return currentMsg.isRX()?"rx":"tx";
+            return currentMsg.isRX()?"Rx":"Tx";
 
         case column_type:
         {

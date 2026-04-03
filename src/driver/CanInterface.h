@@ -52,7 +52,9 @@ public:
         capability_auto_restart    = 0x10,
         capability_config_os       = 0x20,
         capability_custom_bitrate  = 0x40,
-        capability_custom_canfd_bitrate = 0x80
+        capability_custom_canfd_bitrate = 0x80,
+        capability_slcan_enhance_mode = 0x100,
+        capability_can_filter = 0x200
     };
 
 public:

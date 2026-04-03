@@ -31,9 +31,16 @@
 // Maximum rx buffer len
 #define SLCAN_MTU (1 + 8 + 1 + 128 + 1) // canfd 64 frame plus \r plus some padding
 #define SLCAN_STD_ID_LEN 3
+#define SLCAN_EH_STD_ID_LEN 2
 #define SLCAN_EXT_ID_LEN 8
+#define SLCAN_EH_EXT_ID_LEN 4
 
-#define RXCIRBUF_LEN 8192 // Buffer for received serial data, serviced at 1ms intervals
+#define SLCAN_EH_START (0x80)
+
+#define SLCAN_RET_OK '\x0D'
+#define SLCAN_RET_ERR '\x07'
+
+#define RXCIRBUF_LEN (SLCAN_MTU*128) // Buffer for received serial data, serviced at 1ms intervals
 
 class SLCANDriver;
 
@@ -60,7 +67,7 @@ typedef struct {
 } can_status_t;
 
 typedef struct {
-    char buf[SLCAN_MTU+1];
+    uint8_t buf[SLCAN_MTU+1];
     qint64 length;
 } can_msg_t;
 
@@ -141,12 +148,6 @@ private:
     QList<CanMessage> _can_msg_tx_queue;
     QMutex _serport_mutex;
     QString _name;
-    char _rx_linbuf[SLCAN_MTU+1];
-    int _rx_linbuf_ctr;
-
-    char _rxbuf[RXCIRBUF_LEN];
-    uint32_t _rxbuf_head;
-    uint32_t _rxbuf_tail;
 
     QMutex _rxbuf_mutex;
     MeasurementInterface _settings;
@@ -159,8 +160,60 @@ private:
     uint32_t _send_wait_respond;
     QDateTime  _readMessage_datetime_run;
 
+    QByteArray _rx_data;
+    uint8_t _rx_frame[SLCAN_MTU];
+
+    typedef enum {
+        PARSE_IDLE,
+        PARSE_SLCAN,
+        PARSE_RAW_LENGTH,
+        PARSE_RAW
+    } ParseState;
+    ParseState _rx_state;
+    uint8_t _rx_data_index = 0;
+    uint8_t _rx_raw_length = 0;
+
+    #pragma pack(push, 1)
+    typedef struct{
+        uint16_t std_id;
+        uint8_t dlc;
+        uint8_t data[64];
+    } std_frame_t;
+
+    typedef struct{
+        uint32_t ext_id;
+        uint8_t dlc;
+        uint8_t data[64];
+    } ext_frame_t;
+
+    typedef union {
+        uint8_t data[64+4+1];
+        std_frame_t std_frame ;
+        ext_frame_t ext_frame ;
+    } can_frame_t;
+
+    typedef struct
+    {
+        uint8_t header;
+        uint8_t length;
+        can_frame_t frame;
+    } slcan_eh_msg_t;
+    #pragma pack(pop)
+
+#define SLCAN_STD_HEADER (uint8_t)('t')
+#define SLCAN_EXT_HEADER (uint8_t)('T')
+#define SLCAN_STD_REMOTE_HEADER (uint8_t)('r')
+#define SLCAN_EXT_REMOTE_HEADER (uint8_t)('R')
+#define SLCAN_STD_FD_HEADER (uint8_t)('d')
+#define SLCAN_EXT_FD_HEADER (uint8_t)('D')
+#define SLCAN_STD_FDBRS_HEADER (uint8_t)('b')
+#define SLCAN_EXT_FDBRS_HEADER (uint8_t)('B')
+
     bool updateStatus();
-    bool parseMessage(CanMessage &msg);
+    int8_t hal_dlc_code_to_bytes(uint8_t hal_dlc_code);
+    bool parseMessage(CanMessage &msg, uint8_t *buf, uint8_t len);
+    void eh_sendMessage(const CanMessage &msg);
+    bool eh_parseMessage(CanMessage &msg, uint8_t *buf);
 
 private slots:
     void handleSerialError(QSerialPort::SerialPortError error);

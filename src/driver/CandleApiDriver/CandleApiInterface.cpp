@@ -5,6 +5,7 @@ CandleApiInterface::CandleApiInterface(CandleApiDriver *driver, candle_handle ha
   : CanInterface(driver),
     _hostOffsetStart(0),
     _deviceTicksStart(0),
+    _isOpen(false),
     _handle(handle),
     _backend(driver->backend()),
     _numRx(0),
@@ -29,6 +30,9 @@ CandleApiInterface::CandleApiInterface(CandleApiDriver *driver, candle_handle ha
         << CandleApiTiming(170000000,  250000, 875, 4,  147, 21)
         << CandleApiTiming(170000000,  500000, 875, 2,  147, 21)
         << CandleApiTiming(170000000, 1000000, 875, 1,  147, 21);
+
+    _timings
+        << CandleApiTiming(160000000, 1000000, 875, 1,  139-1, 20);
 
 
     // Timings for 48MHz processors (CANable 0.X)

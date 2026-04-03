@@ -246,36 +246,84 @@
         <translation type="unfinished">数据段采样点：</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="252"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="294"/>
         <source>Custom Bitrate + Sample Point</source>
         <translation type="unfinished">自定义波特率+采样点</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="259"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="301"/>
         <source>Custom CAN FD Data Bitrate + Sample Point</source>
         <translation type="unfinished">自定义CANFD数据段波特率+采样点</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="278"/>
-        <location filename="driver/GenericCanSetupPage.ui" line="341"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="308"/>
+        <source>SLCAN Enhance Mode (Use binary data, save 50% time)</source>
+        <translation type="unfinished">SLCAN 增强模式（使用二进制数据，节省50%时间）</translation>
+    </message>
+    <message>
+        <source>SLCAN Enhance Mode</source>
+        <translation type="vanished">SLCAN 增强模式</translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="315"/>
+        <source>CAN ID Filter</source>
+        <translation type="unfinished">CAN ID过滤</translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="349"/>
+        <source>Standard ID Filter</source>
+        <translation type="unfinished">标准ID过滤</translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="361"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="481"/>
+        <source>Filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="368"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="488"/>
+        <source>MASK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="388"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="425"/>
+        <source>HHH</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="469"/>
+        <source>Extended ID Filter</source>
+        <translation type="unfinished">扩展ID过滤</translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="508"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="545"/>
+        <source>HHHHHHHH</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="driver/GenericCanSetupPage.ui" line="644"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="723"/>
         <source>HHHHHH</source>
         <oldsource>HHHH</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="312"/>
-        <location filename="driver/GenericCanSetupPage.ui" line="325"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="632"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="711"/>
         <source>Div+Seg1+Seg2 (Hex)</source>
         <oldsource>Seg1+Seg2 (Hex)</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="382"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="221"/>
         <source>CAN FD Data Phase Setting</source>
         <translation type="unfinished">CAN FD 数据段设置</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="402"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="241"/>
         <source>CAN Setting / CAN FD Arbitration Phase Setting</source>
         <translation type="unfinished">CAN设置 / CAN FD 仲裁段设置</translation>
     </message>
@@ -293,27 +341,27 @@
         <translation type="unfinished">选项：</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="217"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="259"/>
         <source>configured by operating system</source>
         <translation type="unfinished">由操作系统配置</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="224"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="266"/>
         <source>Bus Monitoring mode</source>
         <translation type="unfinished">使能总线监控模式</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="231"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="273"/>
         <source>One-Shot mode</source>
         <translation type="unfinished">使能单次模式</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="238"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="280"/>
         <source>Triple Sampling</source>
         <translation type="unfinished">使能三倍采样</translation>
     </message>
     <message>
-        <location filename="driver/GenericCanSetupPage.ui" line="245"/>
+        <location filename="driver/GenericCanSetupPage.ui" line="287"/>
         <source>Auto-Restart on bus off condition</source>
         <translation type="unfinished">在总线关闭状态下自动重启</translation>
     </message>
