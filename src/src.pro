@@ -14,6 +14,18 @@ CONFIG += link_pkgconfig
 TRANSLATIONS = i18n_zh_cn.ts
 RC_ICONS = cangaroo.ico
 
+VERSION = 0.2.4.3
+
+QMAKE_TARGET_COMPANY = "WeAct Studio"
+QMAKE_TARGET_PRODUCT = "cangaroo (WeActStudio Modified)"
+QMAKE_TARGET_DESCRIPTION = "CAN bus analysis tool"
+QMAKE_TARGET_COPYRIGHT = "Original Copyright (C) HubertD | Modified (C) 2026 WeActStudio, GPLv2"
+DEFINES += APP_PRODUCT_NAME=\"\\\"$$QMAKE_TARGET_PRODUCT\\\"\"
+win32 {
+    QMAKE_TARGET_PRODUCTVERSION = $$VERSION
+    QMAKE_TARGET_FILEVERSION = $$VERSION
+}
+
 DESTDIR = ../bin
 MOC_DIR = ../build/moc
 RCC_DIR = ../build/rcc

@@ -149,6 +149,13 @@ void RawTxWindow::changeDLC()
     uint8_t dlc = ui->comboBoxDLC->currentData().toUInt();
 
     // If DLC > 8, must be FD
+    CanInterface *intf = _backend.getInterfaceById((CanInterfaceId)ui->comboBoxInterface->currentData().toUInt());
+
+    if(intf == NULL)
+    {
+        return;
+    }
+
     if(dlc > 8)
     {
         ui->checkbox_FD->setChecked(true);
@@ -156,7 +163,8 @@ void RawTxWindow::changeDLC()
     }
     else
     {
-        ui->checkbox_FD->setEnabled(true);
+        if(intf->getCapabilities() & intf->capability_canfd)
+            ui->checkbox_FD->setEnabled(true);
         if(ui->checkBox_IsRTR->isChecked())
             dlc = 0;
     }
@@ -354,8 +362,8 @@ void RawTxWindow::updateCapabilities()
                 ui->comboBoxDLC->setCurrentIndex(idx_restore);
 
             // Unset/disable FD / BRS checkboxes
-            ui->checkbox_FD->setDisabled(1);
-            ui->checkbox_BRS->setDisabled(1);
+            ui->checkbox_FD->setDisabled(true);
+            ui->checkbox_BRS->setDisabled(true);
             ui->checkbox_FD->setChecked(false);
             ui->checkbox_BRS->setChecked(false);
 

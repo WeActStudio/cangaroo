@@ -51,6 +51,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    this->setWindowTitle(QString("%1 v%2")
+        .arg(APP_PRODUCT_NAME)
+        .arg(QApplication::applicationVersion())
+    );
+
     _baseWindowTitle = windowTitle();
 
     QIcon icon(":/assets/cangaroo.png");
@@ -456,17 +462,17 @@ bool MainWindow::showSetupDialog()
 
 void MainWindow::showAboutDialog()
 {
-    QMessageBox::about(this,
-                       tr("About cangaroo"),
-       "cangaroo\n"
-       "open source can bus analyzer\n"
-       "\n"
-       "version 0.2.4.3\n"
-       "\n"
-       "(c)2015-2017 Hubert Denkmair\n"
-       "(c)2018-2022 Ethan Zonca\n"
-       "(c)2024-2026 WeAct Studio"
-    );
+    QString aboutText = QString("cangaroo\n"
+                                "open source can bus analyzer\n"
+                                "\n"
+                                "version: %1\n"
+                                "\n"
+                                "(c)2015-2017 Hubert Denkmair\n"
+                                "(c)2018-2022 Ethan Zonca\n"
+                                "(c)2024-2026 WeAct Studio")
+                            .arg(QApplication::applicationVersion());
+
+    QMessageBox::about(this, tr("About cangaroo"), aboutText);
 }
 
 void MainWindow::startMeasurement()

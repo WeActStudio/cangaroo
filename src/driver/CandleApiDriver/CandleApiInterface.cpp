@@ -32,8 +32,11 @@ CandleApiInterface::CandleApiInterface(CandleApiDriver *driver, candle_handle ha
         << CandleApiTiming(170000000, 1000000, 875, 1,  147, 21);
 
     _timings
+        << CandleApiTiming(160000000, 100000, 875, 10,  139-1, 20)
+        << CandleApiTiming(160000000, 125000, 875, 8,  139-1, 20)
+        << CandleApiTiming(160000000, 250000, 875, 4,  139-1, 20)
+        << CandleApiTiming(160000000, 500000, 875, 2,  139-1, 20)
         << CandleApiTiming(160000000, 1000000, 875, 1,  139-1, 20);
-
 
     // Timings for 48MHz processors (CANable 0.X)
     _timings
@@ -157,6 +160,11 @@ void CandleApiInterface::applyConfig(const MeasurementInterface &mi)
 unsigned CandleApiInterface::getBitrate()
 {
     return _settings.bitrate();
+}
+
+int CandleApiInterface::getSamplePoint()
+{
+    return _settings.samplePoint();
 }
 
 uint32_t CandleApiInterface::getCapabilities()
