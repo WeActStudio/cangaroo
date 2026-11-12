@@ -88,6 +88,64 @@ CandleApiInterface::CandleApiInterface(CandleApiDriver *driver, candle_handle ha
         << CandleApiTiming(48000000,  800000, 867,   4, 11, 2)
         << CandleApiTiming(48000000, 1000000, 875,   3, 12, 2);
 
+    // Timings for 36MHz processors (CH32F103 / STM32F103: bxCAN clock = PCLK1 = 36MHz)
+    // bxCAN limits: prop_seg = 1, sjw = 1, tseg1 = prop_seg + phase_seg1 <= 16,
+    //               phase_seg2 <= 8, brp <= 1024.
+    // tq = 1(sync) + prop_seg(1) + phase_seg1 + phase_seg2 = 2 + p1 + p2
+    _timings
+        // sample point: 50.0% (tq = 8)
+        << CandleApiTiming(36000000,   10000, 500, 450,  2, 4)
+        << CandleApiTiming(36000000,   20000, 500, 225,  2, 4)
+        << CandleApiTiming(36000000,   50000, 500,  90,  2, 4)
+        << CandleApiTiming(36000000,   83333, 500,  54,  2, 4)
+        << CandleApiTiming(36000000,  100000, 500,  45,  2, 4)
+        << CandleApiTiming(36000000,  125000, 500,  36,  2, 4)
+        << CandleApiTiming(36000000,  250000, 500,  18,  2, 4)
+        << CandleApiTiming(36000000,  500000, 500,   9,  2, 4)
+
+        // sample point: 62.5% (tq = 8)
+        << CandleApiTiming(36000000,   10000, 625, 450,  3, 3)
+        << CandleApiTiming(36000000,   20000, 625, 225,  3, 3)
+        << CandleApiTiming(36000000,   50000, 625,  90,  3, 3)
+        << CandleApiTiming(36000000,   83333, 625,  54,  3, 3)
+        << CandleApiTiming(36000000,  100000, 625,  45,  3, 3)
+        << CandleApiTiming(36000000,  125000, 625,  36,  3, 3)
+        << CandleApiTiming(36000000,  250000, 625,  18,  3, 3)
+        << CandleApiTiming(36000000,  500000, 625,   9,  3, 3)
+
+        // sample point: 75.0% (tq = 8)
+        << CandleApiTiming(36000000,   10000, 750, 450,  4, 2)
+        << CandleApiTiming(36000000,   20000, 750, 225,  4, 2)
+        << CandleApiTiming(36000000,   50000, 750,  90,  4, 2)
+        << CandleApiTiming(36000000,   83333, 750,  54,  4, 2)
+        << CandleApiTiming(36000000,  100000, 750,  45,  4, 2)
+        << CandleApiTiming(36000000,  125000, 750,  36,  4, 2)
+        << CandleApiTiming(36000000,  250000, 750,  18,  4, 2)
+        << CandleApiTiming(36000000,  500000, 750,   9,  4, 2)
+
+        // sample point: 87.5% (tq = 8) - default
+        << CandleApiTiming(36000000,   10000, 875, 450,  5, 1)
+        << CandleApiTiming(36000000,   20000, 875, 225,  5, 1)
+        << CandleApiTiming(36000000,   50000, 875,  90,  5, 1)
+        << CandleApiTiming(36000000,   83333, 875,  54,  5, 1)
+        << CandleApiTiming(36000000,  100000, 875,  45,  5, 1)
+        << CandleApiTiming(36000000,  125000, 875,  36,  5, 1)
+        << CandleApiTiming(36000000,  250000, 875,  18,  5, 1)
+        << CandleApiTiming(36000000,  500000, 875,   9,  5, 1)
+
+        // 800k: 36MHz has no exact 87.5% solution, use 86.7% (tq = 15)
+        << CandleApiTiming(36000000,  800000, 867,   3, 11, 2)
+
+        // 1M: 36MHz has no 87.5% solution, alternatives below.
+        // tq = 12, 50.0%
+        << CandleApiTiming(36000000, 1000000, 500,   3,  4, 6)
+        // tq = 12, 75.0% (recommended, matches typical PCAN default)
+        << CandleApiTiming(36000000, 1000000, 750,   3,  7, 3)
+        // tq = 9, 77.8%
+        << CandleApiTiming(36000000, 1000000, 778,   4,  5, 2)
+        // tq = 18, 83.3% (closest to 87.5%)
+        << CandleApiTiming(36000000, 1000000, 833,   2, 13, 3);
+
 
     _timings
         // sample point: 50.0%
